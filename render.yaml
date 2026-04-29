@@ -22,10 +22,8 @@ services:
         sync: false
 
   # Frontend Static Site
-  - type: web
+  - type: static
     name: zapkit-frontend
-    runtime: static
-    plan: free
     buildCommand: chmod +x build.sh && ./build.sh
     staticPublishPath: ./dist
     envVars:
