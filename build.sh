@@ -14,7 +14,8 @@ cp -r home/* dist/home/
 # Build TinyLink Pro
 echo "🔗 Building TinyLink Pro..."
 cd tinylink-pro/frontend
-npm ci --silent
+rm -rf node_modules package-lock.json
+npm install --silent
 npm run build
 cd ../..
 mkdir -p dist/tinylink
@@ -23,7 +24,8 @@ cp -r tinylink-pro/frontend/dist/* dist/tinylink/
 # Build QR Generator Pro
 echo "📱 Building QR Generator Pro..."
 cd qr-generator-pro/frontend
-npm ci --silent
+rm -rf node_modules package-lock.json
+npm install --silent
 npm run build
 cd ../..
 mkdir -p dist/qr

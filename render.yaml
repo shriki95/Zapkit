@@ -30,7 +30,7 @@ services:
     startCommand: serve -s dist -l $PORT
     envVars:
       - key: NODE_VERSION
-        value: "18"
+        value: "20"
       - key: VITE_API_URL
         sync: false
 
