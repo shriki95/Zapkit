@@ -24,37 +24,15 @@ services:
   # Frontend Static Site
   - type: web
     name: zapkit-frontend
-    runtime: static
-    buildCommand: chmod +x build.sh && ./build.sh
-    staticPublishPath: ./dist
+    runtime: node
+    plan: free
+    buildCommand: chmod +x build.sh && ./build.sh && npm install -g serve
+    startCommand: serve -s dist -l $PORT
     envVars:
       - key: NODE_VERSION
         value: "18"
       - key: VITE_API_URL
         sync: false
-    routes:
-      - type: rewrite
-        source: /tinylink
-        destination: /tinylink/index.html
-      - type: rewrite
-        source: /tinylink/*
-        destination: /tinylink/index.html
-      - type: rewrite
-        source: /qr
-        destination: /qr/index.html
-      - type: rewrite
-        source: /qr/*
-        destination: /qr/index.html
-      - type: rewrite
-        source: /*
-        destination: /home/index.html
-    headers:
-      - path: /*
-        name: X-Frame-Options
-        value: DENY
-      - path: /*
-        name: X-Content-Type-Options
-        value: nosniff
 
 databases:
   - name: zapkit-db
