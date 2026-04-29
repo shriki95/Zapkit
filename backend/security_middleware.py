@@ -6,6 +6,7 @@ Security Middleware for FastAPI
 - Connection limiting
 """
 
+import os
 import time
 from fastapi import Request, HTTPException, status
 from fastapi.responses import JSONResponse
@@ -186,9 +187,18 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
                 origin = request.headers.get("Origin")
                 referer = request.headers.get("Referer")
                 
-                # Allow localhost origins
+                # Allow localhost and configured origins
+                allowed_origins = os.getenv(
+                    "ALLOWED_ORIGINS",
+                    "http://localhost:5173,http://localhost:5175,http://localhost:8080"
+                ).split(",")
+                allowed_origins_stripped = [o.strip() for o in allowed_origins]
+
                 if origin:
-                    if any(allowed in origin for allowed in ["localhost", "127.0.0.1"]):
+                    if any(
+                        allowed in origin
+                        for allowed in ["localhost", "127.0.0.1"] + allowed_origins_stripped
+                    ):
                         pass  # Allow
                     else:
                         return JSONResponse(
@@ -196,7 +206,10 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
                             content={"detail": "Invalid origin"}
                         )
                 elif referer:
-                    if any(allowed in referer for allowed in ["localhost", "127.0.0.1"]):
+                    if any(
+                        allowed in referer
+                        for allowed in ["localhost", "127.0.0.1"] + allowed_origins_stripped
+                    ):
                         pass  # Allow
                     else:
                         return JSONResponse(
