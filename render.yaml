@@ -1,10 +1,10 @@
 services:
-  # Backend API
+  # ── Backend API ───────────────────────────────────────────────────────────────
   - type: web
     name: zapkit-backend
     runtime: python
     plan: free
-    rootDir: tinylink-pro/backend
+    rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
@@ -19,20 +19,7 @@ services:
       - key: BASE_URL
         sync: false
       - key: ALLOWED_ORIGINS
-        sync: false
-
-  # Frontend Static Site
-  - type: web
-    name: zapkit-frontend
-    runtime: node
-    plan: free
-    buildCommand: chmod +x build.sh && ./build.sh && npm install -g serve
-    startCommand: serve -s dist -l $PORT
-    envVars:
-      - key: NODE_VERSION
-        value: "20"
-      - key: VITE_API_URL
-        sync: false
+        value: "https://zapkit.netlify.app"
 
 databases:
   - name: zapkit-db

@@ -1,30 +1,23 @@
 [build]
-  command = "chmod +x build.sh && ./build.sh"
+  base    = "frontend"
+  command = "npm install && npm run build"
   publish = "dist"
 
 [build.environment]
-  NODE_VERSION = "18"
-  VITE_API_URL = "https://zapkit-backend.onrender.com"
+  NODE_VERSION = "20"
+  # ⬇ Replace with your Railway backend URL after deploying
+  VITE_API_URL = "https://zapkit-backend-production.up.railway.app"
 
+# SPA fallback — all routes go to index.html (React Router handles them client-side)
 [[redirects]]
-  from = "/tinylink/*"
-  to = "/tinylink/index.html"
-  status = 200
-
-[[redirects]]
-  from = "/qr/*"
-  to = "/qr/index.html"
-  status = 200
-
-[[redirects]]
-  from = "/*"
-  to = "/home/index.html"
+  from   = "/*"
+  to     = "/index.html"
   status = 200
 
 [[headers]]
   for = "/*"
   [headers.values]
-    X-Frame-Options = "DENY"
-    X-Content-Type-Options = "nosniff"
-    Referrer-Policy = "strict-origin-when-cross-origin"
-    Permissions-Policy = "geolocation=(), camera=(), microphone=()"
+    X-Frame-Options             = "DENY"
+    X-Content-Type-Options      = "nosniff"
+    Referrer-Policy             = "strict-origin-when-cross-origin"
+    Permissions-Policy          = "geolocation=(), camera=(), microphone=()"

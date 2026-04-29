@@ -97,7 +97,7 @@ export default function AdModal({ isOpen, onClose, waitTime = 5 }: AdModalProps)
               onClick={onClose}
               className="mt-6 w-full py-3 rounded-lg bg-[#00C4A7] text-white font-semibold hover:bg-[#00B096] transition-colors"
             >
-              Continue to Your Link
+              Continue to Your QR Code
             </button>
           )}
         </div>

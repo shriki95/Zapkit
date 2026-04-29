@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import type { ShortenResponse } from './types'
 import AdUnit from '../../components/AdUnit'
 
-const QR_APP_URL = import.meta.env.VITE_QR_APP_URL ?? '../qr-generator'
+// Single app — use React Router path
+const QR_APP_URL = '/qr'
 
 interface ShareOption {
   label: string

@@ -1,7 +1,7 @@
 # 🎯 ZapKit - Project Context
 
-> **Last Updated:** 2025-01-XX  
-> **Status:** ✅ Ready for Render Deployment
+> **Last Updated:** 2026-04-30  
+> **Status:** ✅ Unified Single-App — Ready for Netlify + Render Deployment
 
 ---
 
@@ -15,45 +15,51 @@
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ Architecture — Unified Single App (2026-04-30)
+
+> **⚠️ MAJOR REFACTOR:** The project was unified from 3 separate apps into ONE React app with React Router.
 
 ```
 ZapKit/
-├── home/                           # Landing page (static HTML)
-│   ├── index.html                  # ✅ Production-ready (relative paths)
-│   └── index-local.html            # For local testing
+├── frontend/                       # ✅ SINGLE unified React app
+│   ├── src/
+│   │   ├── App.tsx                 # React Router + AuthContext (global)
+│   │   ├── main.tsx
+│   │   ├── index.css
+│   │   ├── vite-env.d.ts
+│   │   ├── pages/
+│   │   │   ├── HomePage.tsx        # Route: / (was home/index.html)
+│   │   │   ├── TinyLinkPage.tsx    # Route: /tinylink
+│   │   │   └── QRGeneratorPage.tsx # Route: /qr
+│   │   ├── components/             # Shared components
+│   │   │   ├── AuthModal.tsx       # Global auth modal
+│   │   │   ├── Dashboard.tsx       # Unified dashboard
+│   │   │   ├── Settings.tsx
+│   │   │   ├── GDPRBanner.tsx
+│   │   │   ├── AdModal.tsx
+│   │   │   ├── AdUnit.tsx
+│   │   │   ├── SEOOptimizer.tsx
+│   │   │   ├── UsageModal.tsx
+│   │   │   └── SSLUpload.tsx
+│   │   ├── features/
+│   │   │   ├── links/              # TinyLink Pro feature components
+│   │   │   └── qr/                 # QR Generator feature components
+│   │   └── lib/auth.ts             # Auth utilities (unchanged)
+│   ├── public/                     # Static assets
+│   ├── package.json                # Combined dependencies
+│   ├── vite.config.ts
+│   ├── tsconfig.json
+│   └── .env.production             # VITE_API_URL=https://zapkit-backend.onrender.com
 │
-├── tinylink-pro/
-│   ├── frontend/                   # React + TypeScript + Vite
-│   │   ├── src/
-│   │   ├── .env.production         # ✅ Updated for Netlify/Render
-│   │   └── dist/                   # Built files
-│   └── backend/                    # FastAPI + SQLAlchemy
-│       ├── main.py                 # API endpoints
-│       ├── auth.py                 # JWT authentication
-│       ├── database.py             # PostgreSQL connection
-│       ├── models.py               # DB models
-│       ├── requirements.txt        # Python dependencies
-│       └── render.yaml             # Render config (legacy)
+├── backend/                        # FastAPI backend (moved from tinylink-pro/backend/)
+│   ├── main.py                     # All API endpoints (links + QR + auth)
+│   ├── auth.py, models.py, schemas.py, database.py
+│   └── requirements.txt
 │
-├── qr-generator-pro/
-│   └── frontend/                   # React + TypeScript + Vite
-│       ├── src/
-│       │   └── App.tsx             # ✅ Fixed: removed createTrackedQR
-│       ├── .env.production         # ✅ Updated for Netlify/Render
-│       └── dist/                   # Built files
-│
-├── dist/                           # 🎯 Deployment-ready files
-│   ├── home/                       # Landing page
-│   ├── tinylink/                   # TinyLink Pro built
-│   ├── qr/                         # QR Generator built
-│   └── netlify.toml                # Netlify redirects
-│
-├── build.sh                        # ✅ Build script (Linux/Render)
-├── render.yaml                     # ✅ Render Blueprint config
-├── netlify.toml                    # Netlify config
-├── .gitignore                      # Git ignore rules
-└── README.md                       # Project documentation
+├── netlify.toml                    # ✅ Updated: base=frontend, SPA redirect
+├── render.yaml                     # ✅ Updated: rootDir=backend
+├── .gitignore
+└── CONTEXT.md
 ```
 
 ---
@@ -97,18 +103,20 @@ ZapKit/
 
 ## 🌐 URL Structure
 
-### Production (Render):
-- **Landing:** `https://zapkit-frontend.onrender.com/`
-- **TinyLink:** `https://zapkit-frontend.onrender.com/tinylink`
-- **QR Generator:** `https://zapkit-frontend.onrender.com/qr`
+### Production (Netlify + Render):
+- **Landing:** `https://zapkit.netlify.app/`
+- **TinyLink:** `https://zapkit.netlify.app/tinylink`
+- **QR Generator:** `https://zapkit.netlify.app/qr`
 - **API:** `https://zapkit-backend.onrender.com`
 
-### Redirects (handled by Render/Netlify):
+### Routing (React Router v7 — SPA):
 ```
-/tinylink/*  → /tinylink/index.html
-/qr/*        → /qr/index.html
-/*           → /home/index.html
+/          → HomePage.tsx
+/tinylink  → TinyLinkPage.tsx
+/qr        → QRGeneratorPage.tsx
+/*         → redirects to /
 ```
+Netlify serves `index.html` for all routes (SPA redirect in netlify.toml).
 
 ---
 
@@ -255,24 +263,70 @@ VITE_API_URL=https://zapkit-backend.onrender.com
 
 ## 🔄 Recent Changes
 
-### Session: Render Deployment Prep
+### Session: 2026-04-30 — Unification to Single App
+- ✅ **MAJOR:** Merged 3 separate React apps into ONE unified app with React Router v7
+- ✅ Created `frontend/` directory with combined dependencies
+- ✅ Created `App.tsx` with BrowserRouter + AuthContext (shared auth state)
+- ✅ Created `pages/HomePage.tsx` (converted from home/index.html to React)
+- ✅ Created `pages/TinyLinkPage.tsx` (from tinylink-pro App.tsx + bug fixes)
+- ✅ Created `pages/QRGeneratorPage.tsx` (from qr-generator-pro App.tsx + bug fixes)
+- ✅ Fixed Bug: `initAutoLogout` was called twice in TinyLink (memory leak) → moved to App.tsx
+- ✅ Fixed Bug: `VITE_QR_APP_URL` env var in footer → replaced with `<Link to="/qr">`
+- ✅ Fixed Bug: `VITE_TINYLINK_APP_URL` env var in footer → replaced with `<Link to="/tinylink">`
+- ✅ Fixed Bug: All localhost:5173/5175 hardcoded URLs → React Router Links
+- ✅ Fixed Bug: `SEOOptimizer` import in QR page (named vs default export)
+- ✅ Fixed Bug: `ResultCard` QR_APP_URL env var → replaced with `/qr`
+- ✅ Moved backend from `tinylink-pro/backend/` to `backend/`
+- ✅ Updated `netlify.toml` (base=frontend, single SPA redirect)
+- ✅ Updated `render.yaml` (rootDir: backend)
+- ✅ Deleted: home/, tinylink-pro/, qr-generator-pro/, build.sh, build-for-netlify.bat, vercel.json
+- ✅ Build: `npm run build` succeeds with 0 TypeScript errors
+
+### Session: Render Deployment Prep (previous)
 - ✅ Created `render.yaml` for full-stack deployment
 - ✅ Fixed `build.sh` for Linux compatibility
 - ✅ Updated all environment variables
-- ✅ Fixed QR Generator TypeScript error
-- ✅ Removed all instruction files (kept only CONTEXT.md)
-- ✅ Created `.gitignore`
+- ✅ Fixed QR Generator TypeScript error (removed createTrackedQR)
 - ✅ Built all apps to `dist/`
 
 ---
 
 ## 💡 Tips for Next Agent
 
-1. **Don't rebuild unnecessarily** - `dist/` already has built files
-2. **Check environment variables** - They're configured in `.env.production`
-3. **Use `render.yaml`** - It's the single source of truth for deployment
-4. **Authentication is shared** - All apps use same cookies
-5. **Backend is required** - Frontend needs API to work fully
+1. **Single app** - All pages live in `frontend/src/pages/`. No more multiple builds.
+2. **Auth is global** - `AuthContext` in `App.tsx` provides `user`, `setUser`, `showAuthModal`, `dark` to ALL pages via `useAuth()` hook.
+3. **Navigation** - Use `<Link to="/tinylink">` or `<Link to="/qr">`, NOT `<a href>` or `window.location.href`.
+4. **Build** - Run from `frontend/`: `npm install && npm run build` → outputs to `frontend/dist/`
+5. **Backend** - All API endpoints in `backend/main.py`. Run: `cd backend && uvicorn main:app --reload`
+6. **Theme** - `zapkit-theme` in localStorage + cookie, managed globally in `App.tsx`
+7. **Dev** - Frontend: `cd frontend && npm run dev` (port 5173). Backend: `cd backend && uvicorn main:app --reload` (port 8000).
+
+## 🚀 Deployment Commands
+
+### Local Development:
+```bash
+# Terminal 1 — Backend
+cd backend
+pip install -r requirements.txt
+uvicorn main:app --reload --port 8000
+
+# Terminal 2 — Frontend
+cd frontend
+npm install
+npm run dev
+# → http://localhost:5173
+```
+
+### Netlify (Frontend):
+```bash
+cd frontend && npm install && npm run build
+# Upload frontend/dist/ to Netlify
+# OR connect repo: base=frontend, build=npm run build, publish=dist
+```
+
+### Render (Backend):
+- Connect repo, use render.yaml (auto-detects)
+- Set env vars: DATABASE_URL, BASE_URL, ALLOWED_ORIGINS
 
 ---
 
