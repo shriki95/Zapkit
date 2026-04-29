@@ -1,0 +1,459 @@
+import { useState } from 'react'
+import { User, Shield, Bell, Palette, Trash2, CheckCircle, AlertCircle, Copy, Check } from 'lucide-react'
+import { enable2FA, verify2FA, getUser, type User as UserType } from '../lib/auth'
+
+export default function Settings() {
+  const [user, setUser] = useState<UserType | null>(getUser())
+  const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'preferences'>('profile')
+  
+  // 2FA state
+  const [show2FASetup, setShow2FASetup] = useState(false)
+  const [qrCode, setQrCode] = useState<string | null>(null)
+  const [secret, setSecret] = useState<string | null>(null)
+  const [verificationCode, setVerificationCode] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
+  const [secretCopied, setSecretCopied] = useState(false)
+
+  // Profile state
+  const [displayName, setDisplayName] = useState(user?.name || '')
+  const [email] = useState(user?.email || '')
+
+  // Preferences state
+  const [emailNotifications, setEmailNotifications] = useState(true)
+  const [analyticsEmails, setAnalyticsEmails] = useState(false)
+  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system')
+
+  const handle2FAEnable = async () => {
+    setLoading(true)
+    setError('')
+    try {
+      const result = await enable2FA()
+      setQrCode(result.qr_code)
+      setSecret(result.secret)
+      setShow2FASetup(true)
+    } catch (err: any) {
+      setError(err.message || 'Failed to enable 2FA')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handle2FAVerify = async () => {
+    if (verificationCode.length !== 6) {
+      setError('Please enter a 6-digit code')
+      return
+    }
+
+    setLoading(true)
+    setError('')
+    try {
+      const result = await verify2FA(verificationCode)
+      setSuccess(result.message)
+      setShow2FASetup(false)
+      setQrCode(null)
+      setSecret(null)
+      setVerificationCode('')
+      // Update user state to reflect 2FA enabled
+      if (user) {
+        setUser({ ...user, is_active: true }) // Mock: in real app, user would have 2fa_enabled field
+      }
+    } catch (err: any) {
+      setError(err.message || 'Invalid verification code')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const copySecret = async () => {
+    if (secret) {
+      await navigator.clipboard.writeText(secret)
+      setSecretCopied(true)
+      setTimeout(() => setSecretCopied(false), 2000)
+    }
+  }
+
+  const tabs = [
+    { id: 'profile' as const, label: 'Profile', icon: User },
+    { id: 'security' as const, label: 'Security', icon: Shield },
+    { id: 'preferences' as const, label: 'Preferences', icon: Palette },
+  ]
+
+  return (
+    <div className="space-y-6">
+      {/* Welcome header */}
+      <div className="bg-gradient-to-r from-[#00C4A7]/10 to-blue-500/10 rounded-2xl p-6 border border-[#00C4A7]/20">
+        <div className="flex items-start gap-4">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#00C4A7] to-[#00B096] flex items-center justify-center text-white text-2xl font-bold shadow-lg">
+            {user?.name?.[0]?.toUpperCase() || user?.email[0].toUpperCase()}
+          </div>
+          <div className="flex-1">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">
+              Welcome back, {user?.name || user?.email.split('@')[0]}! 👋
+            </h2>
+            <p className="text-slate-600 dark:text-slate-400">
+              Manage your account settings and preferences
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Success/Error messages */}
+      {success && (
+        <div className="flex items-center gap-2 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 p-3 text-sm text-green-700 dark:text-green-400">
+          <CheckCircle size={16} />
+          {success}
+        </div>
+      )}
+      {error && (
+        <div className="flex items-center gap-2 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-3 text-sm text-red-700 dark:text-red-400">
+          <AlertCircle size={16} />
+          {error}
+        </div>
+      )}
+
+      {/* Tabs */}
+      <div className="flex gap-2 border-b border-slate-200 dark:border-slate-700">
+        {tabs.map(tab => {
+          const Icon = tab.icon
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-4 py-3 border-b-2 font-semibold text-sm transition-colors ${
+                activeTab === tab.id
+                  ? 'border-[#00C4A7] text-[#00C4A7]'
+                  : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+              }`}
+            >
+              <Icon size={16} />
+              {tab.label}
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Profile Tab */}
+      {activeTab === 'profile' && (
+        <div className="space-y-6">
+          <div className="card p-6">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Personal Information</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                  Display Name
+                </label>
+                <input
+                  type="text"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#00C4A7]"
+                  placeholder="Your name"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  disabled
+                  className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 cursor-not-allowed"
+                />
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                  Email cannot be changed
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3 pt-2">
+                <button className="px-4 py-2 rounded-lg bg-[#00C4A7] text-white font-semibold hover:bg-[#00B096] transition-colors">
+                  Save Changes
+                </button>
+                <button className="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Account Stats */}
+          <div className="card p-6">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Account Statistics</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-800">
+                <div className="text-2xl font-bold text-[#00C4A7]">3</div>
+                <div className="text-sm text-slate-600 dark:text-slate-400">Total Links</div>
+              </div>
+              <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-800">
+                <div className="text-2xl font-bold text-[#00C4A7]">2</div>
+                <div className="text-sm text-slate-600 dark:text-slate-400">QR Codes</div>
+              </div>
+              <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-800">
+                <div className="text-2xl font-bold text-[#00C4A7]">1,890</div>
+                <div className="text-sm text-slate-600 dark:text-slate-400">Total Clicks</div>
+              </div>
+              <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-800">
+                <div className="text-2xl font-bold text-[#00C4A7]">198</div>
+                <div className="text-sm text-slate-600 dark:text-slate-400">Total Scans</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Security Tab */}
+      {activeTab === 'security' && (
+        <div className="space-y-6">
+          {/* 2FA Section */}
+          <div className="card p-6">
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">Two-Factor Authentication</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400">
+                  Add an extra layer of security to your account
+                </p>
+              </div>
+              <div className="px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs font-semibold">
+                Recommended
+              </div>
+            </div>
+
+            {!show2FASetup ? (
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 p-4 rounded-lg bg-slate-50 dark:bg-slate-800">
+                  <Shield size={24} className="text-[#00C4A7]" />
+                  <div className="flex-1">
+                    <div className="font-semibold text-slate-900 dark:text-white">Status: Disabled</div>
+                    <div className="text-sm text-slate-600 dark:text-slate-400">
+                      Enable 2FA to protect your account with Google Authenticator
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={handle2FAEnable}
+                  disabled={loading}
+                  className="w-full px-4 py-3 rounded-lg bg-[#00C4A7] text-white font-semibold hover:bg-[#00B096] transition-colors disabled:opacity-50"
+                >
+                  {loading ? 'Setting up...' : 'Enable 2FA'}
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle size={20} className="text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm text-blue-800 dark:text-blue-300">
+                      <p className="font-semibold mb-1">Setup Instructions:</p>
+                      <ol className="list-decimal list-inside space-y-1">
+                        <li>Install Google Authenticator on your phone</li>
+                        <li>Scan the QR code below or enter the secret key manually</li>
+                        <li>Enter the 6-digit code from the app to verify</li>
+                      </ol>
+                    </div>
+                  </div>
+                </div>
+
+                {qrCode && (
+                  <div className="flex flex-col items-center gap-4 p-6 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                    <img src={qrCode} alt="2FA QR Code" className="w-48 h-48 rounded-lg" />
+                    
+                    {secret && (
+                      <div className="w-full">
+                        <p className="text-xs text-slate-600 dark:text-slate-400 mb-2 text-center">
+                          Can't scan? Enter this code manually:
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <code className="flex-1 px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-900 text-sm font-mono text-center">
+                            {secret}
+                          </code>
+                          <button
+                            onClick={copySecret}
+                            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                            title="Copy secret"
+                          >
+                            {secretCopied ? <Check size={18} className="text-green-500" /> : <Copy size={18} className="text-slate-400" />}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                    Verification Code
+                  </label>
+                  <input
+                    type="text"
+                    value={verificationCode}
+                    onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    maxLength={6}
+                    className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-center text-2xl tracking-widest font-mono focus:outline-none focus:ring-2 focus:ring-[#00C4A7]"
+                    placeholder="000000"
+                  />
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={handle2FAVerify}
+                    disabled={loading || verificationCode.length !== 6}
+                    className="flex-1 px-4 py-3 rounded-lg bg-[#00C4A7] text-white font-semibold hover:bg-[#00B096] transition-colors disabled:opacity-50"
+                  >
+                    {loading ? 'Verifying...' : 'Verify & Enable'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShow2FASetup(false)
+                      setQrCode(null)
+                      setSecret(null)
+                      setVerificationCode('')
+                    }}
+                    className="px-4 py-3 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Change Password */}
+          <div className="card p-6">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Change Password</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                  Current Password
+                </label>
+                <input
+                  type="password"
+                  className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#00C4A7]"
+                  placeholder="••••••••"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                  New Password
+                </label>
+                <input
+                  type="password"
+                  className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#00C4A7]"
+                  placeholder="••••••••"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                  Confirm New Password
+                </label>
+                <input
+                  type="password"
+                  className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#00C4A7]"
+                  placeholder="••••••••"
+                />
+              </div>
+              <button className="px-4 py-2 rounded-lg bg-[#00C4A7] text-white font-semibold hover:bg-[#00B096] transition-colors">
+                Update Password
+              </button>
+            </div>
+          </div>
+
+          {/* Danger Zone */}
+          <div className="card p-6 border-red-200 dark:border-red-800">
+            <h3 className="text-lg font-bold text-red-600 dark:text-red-400 mb-4 flex items-center gap-2">
+              <Trash2 size={20} />
+              Danger Zone
+            </h3>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+              Once you delete your account, there is no going back. All your links, QR codes, and analytics will be permanently deleted.
+            </p>
+            <button className="px-4 py-2 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 transition-colors">
+              Delete Account
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Preferences Tab */}
+      {activeTab === 'preferences' && (
+        <div className="space-y-6">
+          {/* Notifications */}
+          <div className="card p-6">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+              <Bell size={20} />
+              Notifications
+            </h3>
+            <div className="space-y-4">
+              <label className="flex items-center justify-between p-4 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition-colors">
+                <div>
+                  <div className="font-semibold text-slate-900 dark:text-white">Email Notifications</div>
+                  <div className="text-sm text-slate-600 dark:text-slate-400">Receive updates about your account</div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={emailNotifications}
+                  onChange={(e) => setEmailNotifications(e.target.checked)}
+                  className="w-5 h-5 rounded border-slate-300 text-[#00C4A7] focus:ring-[#00C4A7]"
+                />
+              </label>
+
+              <label className="flex items-center justify-between p-4 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition-colors">
+                <div>
+                  <div className="font-semibold text-slate-900 dark:text-white">Weekly Analytics Report</div>
+                  <div className="text-sm text-slate-600 dark:text-slate-400">Get weekly summaries of your link performance</div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={analyticsEmails}
+                  onChange={(e) => setAnalyticsEmails(e.target.checked)}
+                  className="w-5 h-5 rounded border-slate-300 text-[#00C4A7] focus:ring-[#00C4A7]"
+                />
+              </label>
+            </div>
+          </div>
+
+          {/* Appearance */}
+          <div className="card p-6">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+              <Palette size={20} />
+              Appearance
+            </h3>
+            <div className="space-y-3">
+              {(['light', 'dark', 'system'] as const).map(option => (
+                <label
+                  key={option}
+                  className="flex items-center justify-between p-4 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-lg ${
+                      option === 'light' ? 'bg-white border-2 border-slate-300' :
+                      option === 'dark' ? 'bg-slate-900 border-2 border-slate-700' :
+                      'bg-gradient-to-br from-white to-slate-900 border-2 border-slate-400'
+                    }`} />
+                    <div>
+                      <div className="font-semibold text-slate-900 dark:text-white capitalize">{option}</div>
+                      <div className="text-sm text-slate-600 dark:text-slate-400">
+                        {option === 'system' ? 'Match system preference' : `${option} mode`}
+                      </div>
+                    </div>
+                  </div>
+                  <input
+                    type="radio"
+                    name="theme"
+                    checked={theme === option}
+                    onChange={() => setTheme(option)}
+                    className="w-5 h-5 text-[#00C4A7] focus:ring-[#00C4A7]"
+                  />
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}

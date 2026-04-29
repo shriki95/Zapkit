@@ -1,0 +1,28 @@
+{
+  "name": "TinyLink Pro",
+  "short_name": "TinyLink",
+  "description": "Free URL shortener with click analytics and QR codes",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#00C4A7",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Shorten a Link",
+      "short_name": "Shorten",
+      "description": "Paste a URL and get a short link",
+      "url": "/#shorten",
+      "icons": [{ "src": "/favicon.svg", "sizes": "any" }]
+    },
+    {
+      "name": "My Links",
+      "short_name": "My Links",
+      "description": "View and manage your shortened links",
+      "url": "/#links",
+      "icons": [{ "src": "/favicon.svg", "sizes": "any" }]
+    }
+  ]
+}

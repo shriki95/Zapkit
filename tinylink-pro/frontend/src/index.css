@@ -1,0 +1,57 @@
+@import 'tailwindcss';
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    --brand: #00C4A7;
+    --brand-hover: #00B096;
+  }
+  body {
+    @apply bg-white text-slate-900 antialiased;
+    font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  }
+  .dark body {
+    @apply bg-slate-950 text-slate-100;
+  }
+}
+
+@layer utilities {
+  .btn-primary {
+    @apply bg-[#00C4A7] hover:bg-[#00B096] text-white font-semibold px-5 py-2.5 rounded-xl transition-colors duration-200 cursor-pointer;
+  }
+  .card {
+    @apply bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm;
+  }
+  .input-field {
+    @apply w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00C4A7] transition;
+  }
+}
+
+/* SSE pulse animation */
+@keyframes pulse-ring {
+  0% { transform: scale(0.8); opacity: 1; }
+  100% { transform: scale(2); opacity: 0; }
+}
+.pulse-ring {
+  animation: pulse-ring 1.5s ease-out infinite;
+}
+
+/* Smooth tab underline */
+.tab-active {
+  position: relative;
+}
+.tab-active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #00C4A7;
+  border-radius: 2px;
+}
+
+/* Ad placeholder styling */
+.ad-placeholder {
+  @apply flex items-center justify-center bg-slate-100 dark:bg-slate-800 border border-dashed border-slate-300 dark:border-slate-600 rounded-xl text-xs text-slate-400 uppercase tracking-widest font-medium;
+}
