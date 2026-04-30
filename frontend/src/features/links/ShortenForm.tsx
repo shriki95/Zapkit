@@ -5,7 +5,7 @@ import { incrementUsage } from '../../components/UsageModal'
 import AdModal from '../../components/AdModal'
 import { getToken } from '../../lib/auth'
 
-const API = '/api'
+const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 interface Props {
   onResult: (r: ShortenResponse) => void

@@ -29,13 +29,13 @@ export default function AnalyticsPanel({ shortCode, shortUrl, onClose }: Props) 
 
   useEffect(() => {
     setLoading(true)
-    fetch(`/api/links/${shortCode}/stats`, { credentials: 'include' })
+    fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/links/${shortCode}/stats`, { credentials: 'include' })
       .then(r => r.json())
       .then(d => { setStats(d); setLoading(false) })
       .catch(() => setLoading(false))
 
     // SSE live counter
-    const es = new EventSource(`/api/links/${shortCode}/live`)
+    const es = new EventSource(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/links/${shortCode}/live`)
     sseRef.current = es
     es.onmessage = (e) => {
       const data = JSON.parse(e.data)
