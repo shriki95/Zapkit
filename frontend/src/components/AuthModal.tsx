@@ -194,7 +194,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, mode: initialMod
               </div>
               {mode === 'register' && (
                 <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                  At least 6 characters
+                  Min 8 chars · uppercase · lowercase · number · special char (!@#$%)
                 </p>
               )}
               {mode === 'login' && (

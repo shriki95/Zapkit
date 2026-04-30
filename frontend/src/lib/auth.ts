@@ -162,6 +162,9 @@ async function apiFetch(path: string, options: RequestInit = {}) {
 async function parseApiError(res: Response, fallback: string) {
   try {
     const error = await res.json()
+    if (Array.isArray(error.detail)) {
+      return error.detail.map((e: any) => e.msg || JSON.stringify(e)).join(', ')
+    }
     return error.detail || fallback
   } catch {
     return fallback

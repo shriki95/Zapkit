@@ -31,6 +31,21 @@ export default function HomePage() {
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: "system-ui, 'Segoe UI', Roboto, sans-serif", background: dark ? '#0f172a' : '#f8fafc', color: dark ? '#f1f5f9' : '#0f172a' }}>
+      <style>{`
+        @media (max-width: 600px) {
+          .zk-header-btns { gap: 4px !important; }
+          .zk-header-btns a, .zk-header-btns button { padding: 5px 8px !important; font-size: 0.78rem !important; }
+          .zk-stats-grid { grid-template-columns: repeat(3,1fr) !important; gap: 0.5rem !important; }
+          .zk-stats-grid > div > div:first-child { font-size: 1.4rem !important; }
+          .zk-cards-grid { padding: 0 1rem 2.5rem !important; margin-top: -1.5rem !important; }
+          .zk-hero { padding: 3rem 1rem 2.5rem !important; }
+          .zk-footer { padding: 1rem !important; font-size: 0.7rem !important; }
+        }
+        @media (max-width: 400px) {
+          .zk-stats-grid { grid-template-columns: 1fr !important; }
+          .zk-header-logo span { font-size: 0.95rem !important; }
+        }
+      `}</style>
 
       {/* ── Header ── */}
       <header style={{
@@ -52,7 +67,7 @@ export default function HomePage() {
           </span>
         </Link>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div className="zk-header-btns" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {user ? (
             <>
               <Link
