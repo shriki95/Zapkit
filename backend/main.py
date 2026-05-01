@@ -57,13 +57,7 @@ from security import (
     sanitize_input,
 )
 from email_service import send_password_reset_email, send_welcome_email
-from security_middleware import (
-    SecurityMiddleware,
-    RequestValidationMiddleware,
-    CSRFProtectionMiddleware,
-    cleanup_security_data,
-)
-from ddos_protection import ddos_protection
+from security_middleware import cleanup_security_data
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -85,11 +79,7 @@ ALLOWED_ORIGINS = list(set(_ALWAYS_ALLOWED_ORIGINS + _env_origins))
 
 app = FastAPI(title="TinyLink Pro API", version="1.0.0")
 
-# Add security middlewares (order matters!)
-app.add_middleware(SecurityMiddleware)
-app.add_middleware(RequestValidationMiddleware)
-app.add_middleware(CSRFProtectionMiddleware)
-
+# CORS — must be first (outermost) middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
@@ -110,7 +100,23 @@ async def security_headers(request: Request, call_next):
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     response.headers["Permissions-Policy"] = "geolocation=(), camera=()"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
     return response
+
+
+@app.options("/{rest_of_path:path}")
+async def preflight_handler(request: Request, rest_of_path: str):
+    """Explicit OPTIONS handler to ensure CORS preflight always succeeds"""
+    return Response(
+        status_code=200,
+        headers={
+            "Access-Control-Allow-Origin": request.headers.get("origin", "*"),
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+            "Access-Control-Allow-Credentials": "true",
+            "Access-Control-Max-Age": "86400",
+        },
+    )
 
 
 @app.on_event("startup")
