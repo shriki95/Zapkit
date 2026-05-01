@@ -72,31 +72,35 @@ app = FastAPI(title="ZapKit API", version="1.0.0")
 async def cors_and_security(request: Request, call_next):
     origin = request.headers.get("origin", "")
 
-    # Handle CORS preflight immediately — no route handler needed
+    # CORS headers to add to every response
+    cors_headers = {
+        "Access-Control-Allow-Origin": origin or "*",
+        "Access-Control-Allow-Credentials": "true",
+        "Access-Control-Allow-Methods": "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT",
+        "Access-Control-Allow-Headers": "Authorization, Content-Type, Accept, Origin, X-Requested-With",
+    }
+
+    # Handle CORS preflight immediately
     if request.method == "OPTIONS":
-        return Response(
-            status_code=200,
-            headers={
-                "Access-Control-Allow-Origin": origin or "*",
-                "Access-Control-Allow-Credentials": "true",
-                "Access-Control-Allow-Methods": "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT",
-                "Access-Control-Allow-Headers": "Authorization, Content-Type, Accept, Origin, X-Requested-With",
-                "Access-Control-Max-Age": "86400",
-            },
+        return Response(status_code=200, headers={**cors_headers, "Access-Control-Max-Age": "86400"})
+
+    # Process request — catch ALL exceptions so CORS headers are always set
+    try:
+        response = await call_next(request)
+    except Exception as exc:
+        print(f"❌ Unhandled exception: {exc}")
+        response = Response(
+            status_code=500,
+            content=json.dumps({"detail": f"Internal server error: {type(exc).__name__}: {exc}"}).encode(),
+            media_type="application/json",
         )
 
-    response = await call_next(request)
-
-    # CORS headers on every response
-    if origin:
-        response.headers["Access-Control-Allow-Origin"] = origin
-        response.headers["Access-Control-Allow-Credentials"] = "true"
-
-    # Security headers
+    # Always add CORS + security headers
+    for k, v in cors_headers.items():
+        response.headers[k] = v
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-    response.headers["Permissions-Policy"] = "geolocation=(), camera=()"
 
     return response
 
@@ -114,9 +118,19 @@ async def startup():
 
 
 @app.get("/health")
-async def health_check():
-    """Health check endpoint (bypasses security)"""
-    return {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}
+async def health_check(db: AsyncSession = Depends(get_db)):
+    """Health check endpoint — also tests DB connection"""
+    from sqlalchemy import text
+    try:
+        await db.execute(text("SELECT 1"))
+        db_status = "ok"
+    except Exception as e:
+        db_status = f"error: {e}"
+    return {
+        "status": "healthy",
+        "db": db_status,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
 
 
 @app.get("/api/security/stats")
