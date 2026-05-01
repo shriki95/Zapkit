@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { User, Shield, Palette, CheckCircle, AlertCircle, Copy, Check, Lock, Eye, EyeOff, Link2, QrCode, TrendingUp, BarChart3 } from 'lucide-react'
+import { User, Shield, Palette, CheckCircle, AlertCircle, Copy, Check, Lock, Eye, EyeOff, Link2, QrCode, TrendingUp, BarChart3, Trash2, Bell } from 'lucide-react'
 import { enable2FA, verify2FA, getUser, changePassword, getDashboard, type User as UserType } from '../lib/auth'
 
 export default function Settings() {

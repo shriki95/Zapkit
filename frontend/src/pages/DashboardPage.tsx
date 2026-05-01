@@ -11,7 +11,7 @@ import {
 import {
   ArrowUpRight, BarChart3, Calendar, ExternalLink, Link2,
   QrCode, RefreshCw, TrendingUp, Eye, Zap,
-  LogIn, LogOut, Moon, Sun, User as UserIcon,
+  LogIn, LogOut, Moon, Sun,
 } from 'lucide-react'
 import { getDashboard, getLinkStats, getQRStats, logout, type LinkStats, type QRStats } from '../lib/auth'
 import { useAuth } from '../App'
