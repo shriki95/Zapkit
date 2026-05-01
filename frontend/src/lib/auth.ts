@@ -229,6 +229,16 @@ export async function getQRStats(qrCode: string): Promise<QRStats> {
   return res.json()
 }
 
+export async function deleteLink(shortCode: string): Promise<void> {
+  const res = await apiFetch(`/api/dashboard/links/${shortCode}`, { method: 'DELETE' })
+  if (!res.ok) throw new Error(await parseApiError(res, 'Failed to delete link'))
+}
+
+export async function deleteQR(qrCode: string): Promise<void> {
+  const res = await apiFetch(`/api/dashboard/qr/${qrCode}`, { method: 'DELETE' })
+  if (!res.ok) throw new Error(await parseApiError(res, 'Failed to delete QR code'))
+}
+
 export async function requestPasswordReset(email: string): Promise<{ message: string; dev_code?: string }> {
   const res = await apiFetch('/api/auth/password-reset/request', {
     method: 'POST',

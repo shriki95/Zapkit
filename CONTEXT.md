@@ -1,40 +1,45 @@
-# 🎯 ZapKit - Project Context
-
-> **Last Updated:** 2026-04-30  
-> **Status:** ✅ Unified Single-App — Ready for Netlify + Render Deployment
-
----
-
-## 📋 Project Overview
-
-**ZapKit** is an enterprise-grade digital tools suite with:
-- **TinyLink Pro** - URL shortener with real-time analytics
-- **QR Generator Pro** - Advanced QR code creator
-- **Unified Backend** - FastAPI + PostgreSQL
-- **Shared Authentication** - JWT-based auth across all apps
+# ZapKit — Master Context & Developer Handbook
+> **Last Updated:** 2026-05-01  
+> **Stack:** React 19 + TypeScript + Vite + Tailwind CSS v4 + FastAPI + PostgreSQL  
+> **Deployment:** Netlify (frontend) + Railway (backend)  
+> **Live:** https://zapkit2.netlify.app | Backend: https://zapkit-backend-production.up.railway.app
 
 ---
 
-## 🏗️ Architecture — Unified Single App (2026-04-30)
+## 1. What Is ZapKit
 
-> **⚠️ MAJOR REFACTOR:** The project was unified from 3 separate apps into ONE React app with React Router.
+ZapKit is a **multi-tool SaaS platform** (free tier) with:
+- **TinyLink Pro** — URL shortener with UTM tracking, custom aliases, expiry dates, real-time analytics
+- **QR Generator Pro** — 12+ QR types, custom design, logo upload, batch export, scan analytics
+- **Unified Dashboard** — standalone `/dashboard` page with multi-item analytics, delete, Settings tab
+- **Shared Auth** — JWT-based across all pages via `AuthContext` in `App.tsx`
+
+Users can use all tools **without registering**. Registration unlocks the analytics dashboard.
+
+---
+
+## 2. Repository Structure
 
 ```
 ZapKit/
-├── frontend/                       # ✅ SINGLE unified React app
+├── frontend/                          # React SPA (single unified app)
+│   ├── index.html                     # Meta tags + Google Fonts (Plus Jakarta Sans)
 │   ├── src/
-│   │   ├── App.tsx                 # React Router + AuthContext (global)
+│   │   ├── App.tsx                    # BrowserRouter + AuthContext + ScrollToTop + accent loader
 │   │   ├── main.tsx
-│   │   ├── index.css
-│   │   ├── vite-env.d.ts
+│   │   ├── index.css                  # Tailwind v4, CSS vars (--brand, --brand-hover), theme kits
 │   │   ├── pages/
-│   │   │   ├── HomePage.tsx        # Route: / (was home/index.html)
-│   │   │   ├── TinyLinkPage.tsx    # Route: /tinylink
-│   │   │   └── QRGeneratorPage.tsx # Route: /qr
-│   │   ├── components/             # Shared components
-│   │   │   ├── AuthModal.tsx       # Global auth modal
-│   │   │   ├── Dashboard.tsx       # Unified dashboard
-│   │   │   ├── Settings.tsx
+│   │   │   ├── HomePage.tsx           # Route: /
+│   │   │   ├── TinyLinkPage.tsx       # Route: /tinylink
+│   │   │   ├── QRGeneratorPage.tsx    # Route: /qr
+│   │   │   ├── DashboardPage.tsx      # Route: /dashboard (Analytics + Settings tabs)
+│   │   │   ├── PrivacyPage.tsx        # Route: /privacy
+│   │   │   ├── TermsPage.tsx          # Route: /terms
+│   │   │   └── ContactPage.tsx        # Route: /contact
+│   │   ├── components/
+│   │   │   ├── AuthModal.tsx          # Login / Register / Forgot Password modal
+│   │   │   ├── Dashboard.tsx          # Embedded link list (legacy, used in TinyLink settings tab)
+│   │   │   ├── Settings.tsx           # Profile, Security (2FA, change pw), Preferences (theme kits)
 │   │   │   ├── GDPRBanner.tsx
 │   │   │   ├── AdModal.tsx
 │   │   │   ├── AdUnit.tsx
@@ -42,302 +47,418 @@ ZapKit/
 │   │   │   ├── UsageModal.tsx
 │   │   │   └── SSLUpload.tsx
 │   │   ├── features/
-│   │   │   ├── links/              # TinyLink Pro feature components
-│   │   │   └── qr/                 # QR Generator feature components
-│   │   └── lib/auth.ts             # Auth utilities (unchanged)
-│   ├── public/                     # Static assets
-│   ├── package.json                # Combined dependencies
+│   │   │   ├── links/                 # TinyLink feature components
+│   │   │   │   ├── ShortenForm.tsx    # URL input + UTM params + custom alias + expiry
+│   │   │   │   ├── ResultCard.tsx     # Short link result display
+│   │   │   │   ├── LinkDashboard.tsx  # Link list with analytics
+│   │   │   │   ├── AnalyticsPanel.tsx # Charts for individual link
+│   │   │   │   └── types.ts
+│   │   │   └── qr/                   # QR Generator feature components
+│   │   │       ├── QrPreview.tsx
+│   │   │       ├── QrTypeSelector.tsx
+│   │   │       ├── QrDecoder.tsx
+│   │   │       ├── BatchProcessor.tsx
+│   │   │       ├── payload.ts         # QR content builders
+│   │   │       ├── presets.ts
+│   │   │       ├── types.ts
+│   │   │       └── steps/
+│   │   │           ├── ContentForm.tsx  # PhoneInput with 70+ country codes
+│   │   │           └── DesignTabs.tsx
+│   │   └── lib/
+│   │       └── auth.ts                # All API calls + auth utilities
+│   ├── package.json
 │   ├── vite.config.ts
-│   ├── tsconfig.json
-│   └── .env.production             # VITE_API_URL=https://zapkit-backend.onrender.com
+│   ├── tsconfig.app.json              # strict: true, noUnusedLocals: true — watch for TS errors!
+│   └── .env.production                # VITE_API_URL=https://zapkit-backend-production.up.railway.app
 │
-├── backend/                        # FastAPI backend (moved from tinylink-pro/backend/)
-│   ├── main.py                     # All API endpoints (links + QR + auth)
-│   ├── auth.py, models.py, schemas.py, database.py
+├── backend/                           # FastAPI + PostgreSQL
+│   ├── main.py                        # All API endpoints
+│   ├── auth.py                        # hash_password, verify_password, JWT
+│   ├── models.py                      # SQLAlchemy ORM models
+│   ├── schemas.py                     # Pydantic request/response schemas
+│   ├── database.py                    # Async engine + init_db() migrations
+│   ├── security.py                    # Input sanitization, validation
+│   ├── security_middleware.py         # Rate limiting, CORS, DDoS protection
+│   ├── analytics.py                   # Click/scan recording
+│   ├── email_service.py               # SMTP (mock mode when EMAIL_MOCK_MODE=true)
+│   ├── encryption.py
+│   ├── shortener.py                   # Short code generation
 │   └── requirements.txt
 │
-├── netlify.toml                    # ✅ Updated: base=frontend, SPA redirect
-├── render.yaml                     # ✅ Updated: rootDir=backend
-├── .gitignore
-└── CONTEXT.md
+├── netlify.toml                       # base=frontend, SPA redirect, security headers
+├── render.yaml                        # Backend on Railway (rootDir: backend)
+└── CONTEXT.md                         # This file
 ```
 
 ---
 
-## 🔧 Technical Stack
+## 3. Frontend Architecture
 
-### Frontend:
-- **Framework:** React 18 + TypeScript
-- **Build Tool:** Vite
-- **Styling:** Tailwind CSS
-- **State:** React hooks + Context
-- **Auth:** JWT tokens in cookies + localStorage
-- **Theme:** Dark mode with cookie sync
-
-### Backend:
-- **Framework:** FastAPI
-- **Database:** PostgreSQL (async with SQLAlchemy)
-- **Auth:** JWT + bcrypt
-- **Email:** SMTP for password reset
-- **Analytics:** Real-time click/scan tracking
-- **Security:** Rate limiting, CORS, CSRF protection
-
----
-
-## 🔐 Authentication System
-
-### Shared Auth Across Apps:
-- **Cookies:** `zapkit_auth_token`, `zapkit_user`, `zapkit_last_activity`
-- **Path:** `/` (shared across all subpaths)
-- **Expiry:** 7 days
-- **Idle Timeout:** 30 minutes
-
-### Flow:
-1. User logs in via TinyLink Pro
-2. Token saved in cookie with `path=/`
-3. QR Generator reads same cookie
-4. Home page detects logged-in state
-5. All apps share authentication state
-
----
-
-## 🌐 URL Structure
-
-### Production (Netlify + Render):
-- **Landing:** `https://zapkit.netlify.app/`
-- **TinyLink:** `https://zapkit.netlify.app/tinylink`
-- **QR Generator:** `https://zapkit.netlify.app/qr`
-- **API:** `https://zapkit-backend.onrender.com`
-
-### Routing (React Router v7 — SPA):
+### Routing (React Router v7)
 ```
-/          → HomePage.tsx
-/tinylink  → TinyLinkPage.tsx
-/qr        → QRGeneratorPage.tsx
-/*         → redirects to /
-```
-Netlify serves `index.html` for all routes (SPA redirect in netlify.toml).
-
----
-
-## ✅ What's Working
-
-### Frontend:
-- ✅ All 3 apps built successfully
-- ✅ Navigation between apps (via logo clicks)
-- ✅ Shared dark mode (cookie-based)
-- ✅ Shared authentication (cookie-based)
-- ✅ Responsive design
-- ✅ Production URLs configured
-
-### Backend:
-- ✅ User registration/login
-- ✅ Password reset with email
-- ✅ Link shortening
-- ✅ QR code generation
-- ✅ Real-time analytics
-- ✅ Rate limiting
-- ✅ CORS configured
-
-### Build System:
-- ✅ `build.sh` works on Linux
-- ✅ `dist/` folder ready for deployment
-- ✅ All dependencies installed
-
----
-
-## 🐛 Known Issues & Fixes
-
-### ✅ FIXED:
-1. **QR Generator TypeScript Error**
-   - Issue: `createTrackedQR` function not found
-   - Fix: Removed import and usage from `App.tsx`
-   - Status: ✅ Built successfully
-
-2. **Home Page Links**
-   - Issue: Links were localhost URLs
-   - Fix: Changed to relative paths (`/tinylink`, `/qr`)
-   - Status: ✅ Production-ready
-
-3. **Environment Variables**
-   - Issue: URLs pointed to Vercel
-   - Fix: Updated to Netlify/Render URLs
-   - Status: ✅ Configured
-
-### ⚠️ Current Limitations:
-- Local testing requires `index-local.html` (file:// protocol doesn't support relative paths)
-- Backend needs to be deployed before frontend works fully
-- Email service requires SMTP configuration
-
----
-
-## 🚀 Deployment Status
-
-### Ready for:
-- ✅ **Render** (recommended - supports backend + frontend + database)
-- ✅ **Netlify** (frontend only - needs separate backend)
-
-### Files Configured:
-- ✅ `render.yaml` - Full stack deployment
-- ✅ `netlify.toml` - Frontend deployment
-- ✅ `build.sh` - Build script
-- ✅ `.gitignore` - Git configuration
-
----
-
-## 📝 Next Steps
-
-### For Render Deployment:
-1. Push to GitHub
-2. Connect Render to repo
-3. Render auto-detects `render.yaml`
-4. Set environment variables:
-   - Backend: `BASE_URL`, `ALLOWED_ORIGINS`
-   - Frontend: `VITE_API_URL`
-5. Deploy (auto-builds everything)
-
-### For Firebase/Firestore Integration:
-1. Replace PostgreSQL with Firestore
-2. Update `database.py` to use Firebase SDK
-3. Modify models to use Firestore documents
-4. Update authentication to use Firebase Auth (optional)
-
----
-
-## 🔑 Environment Variables Needed
-
-### Backend:
-```env
-DATABASE_URL=postgresql://...
-SECRET_KEY=<auto-generated>
-BASE_URL=https://zapkit-backend.onrender.com
-ALLOWED_ORIGINS=https://zapkit-frontend.onrender.com
+/           → HomePage
+/tinylink   → TinyLinkPage
+/qr         → QRGeneratorPage
+/dashboard  → DashboardPage (Analytics tab + Settings tab)
+/privacy    → PrivacyPage
+/terms      → TermsPage
+/contact    → ContactPage
+/*          → redirect to /
 ```
 
-### Frontend:
-```env
-VITE_API_URL=https://zapkit-backend.onrender.com
+### AuthContext (App.tsx)
+All pages consume auth state via `useAuth()`:
+```typescript
+const { user, setUser, dark, setDark, showAuthModal, setShowAuthModal, authMode, setAuthMode } = useAuth()
+```
+- `user` — null when logged out, `{ id, email, name, two_fa_enabled }` when logged in
+- `dark` — persisted to `zapkit-theme` in localStorage + cookie
+- `showAuthModal` / `authMode` — controls global AuthModal from any page
+
+### Theme System
+- **Dark mode:** `document.documentElement.classList.toggle('dark', dark)` + cookie `zapkit-theme`
+- **Accent color kits:** `document.documentElement.setAttribute('data-accent', kit)` + localStorage `zapkit-accent`
+- **CSS variables in index.css:** `--brand`, `--brand-hover`, `--brand-light`, `--brand-border`
+- **5 kits:** teal (default), indigo, rose, amber, sky
+- App.tsx loads the accent on mount; Settings.tsx `applyAccent()` function applies it live
+
+### Typography
+- **Font:** Plus Jakarta Sans (Google Fonts, loaded in index.html)
+- Applied globally via `font-family` in `index.css`
+- All h1-h6 have `letter-spacing: -0.025em`
+
+---
+
+## 4. Backend Architecture
+
+### Tech Stack
+- FastAPI + uvicorn
+- SQLAlchemy async (asyncpg for PostgreSQL, aiosqlite for local dev)
+- JWT auth (python-jose)
+- bcrypt password hashing via passlib **PINNED: bcrypt==3.2.2** (see critical bug below)
+- pyotp for real TOTP 2FA
+- qrcode library for QR generation
+
+### Key API Endpoints
+```
+POST   /api/shorten                    — create short link (no auth required)
+GET    /{short_code}                   — redirect (tracks click)
+GET    /api/links/{short_code}/stats   — link analytics (session-based)
+DELETE /api/links/{short_code}         — deactivate link (session-based)
+
+POST   /api/qr/create                  — create QR code
+GET    /api/qr/{qr_code}              — get QR code
+DELETE /api/dashboard/qr/{qr_code}    — delete QR (auth required)
+
+POST   /api/auth/register             — register user
+POST   /api/auth/login                — login → returns JWT + user
+POST   /api/auth/change-password      — change password (auth required)
+POST   /api/auth/password-reset/request — send reset code (mock or real email)
+POST   /api/auth/password-reset/verify  — verify code + set new password
+POST   /api/auth/2fa/enable           — generate TOTP secret + QR image
+POST   /api/auth/2fa/verify           — verify TOTP code → enable 2FA
+
+GET    /api/dashboard                 — all user links + QR codes + totals
+GET    /api/dashboard/links/{code}/analytics — link analytics (auth required)
+GET    /api/dashboard/qr/{code}/analytics   — QR analytics (auth required)
+DELETE /api/dashboard/links/{code}    — delete link (auth required)
+DELETE /api/dashboard/qr/{code}      — delete QR (auth required)
+
+GET    /health                        — health check
+```
+
+### Database Models (models.py)
+- `User`: id, email, hashed_password, name, is_active, two_fa_secret, two_fa_enabled
+- `Link`: id, user_id, short_code, original_url, click_count, is_active, utm_*, created_at, expires_at
+- `Click`: id, link_id, device_type, country, referrer, created_at
+- `QRCode`: id, user_id, qr_code, qr_type, content, scan_count, is_active
+- `QRScan`: id, qr_id, device_type, country, created_at
+
+### Safe DB Migrations (database.py)
+New columns are added via `init_db()` with try/except:
+```python
+# PostgreSQL: IF NOT EXISTS
+"ALTER TABLE users ADD COLUMN IF NOT EXISTS two_fa_secret VARCHAR(64)"
+# SQLite: catch exception if column exists
+try: await conn.execute(text(sql))
+except: pass
 ```
 
 ---
 
-## 📦 Dependencies
+## 5. Frontend ↔ Backend (lib/auth.ts)
 
-### Frontend (each app):
-- react, react-dom
-- typescript
-- vite
-- tailwindcss
-- lucide-react (icons)
-- framer-motion (animations)
-- recharts (analytics charts)
-- qr-code-styling (QR generation)
+All API calls go through `apiFetch()` which:
+1. Reads `VITE_API_URL` env var (default: Railway URL)
+2. Adds `Authorization: Bearer {token}` header
+3. Sets `Content-Type: application/json`
 
-### Backend:
-- fastapi
-- uvicorn
-- sqlalchemy
-- asyncpg (PostgreSQL)
-- pyjwt (authentication)
-- passlib (password hashing)
-- python-dotenv
-- qrcode (QR generation)
+### Key exported functions:
+```typescript
+getUser() → User | null
+getToken() → string | null
+logout()
+register(email, password, name) → TokenResponse
+login(email, password) → TokenResponse
+getDashboard() → DashboardData
+getLinkStats(shortCode) → LinkStats
+getQRStats(qrCode) → QRStats
+deleteLink(shortCode) → void
+deleteQR(qrCode) → void
+changePassword(current, new) → { message }
+requestPasswordReset(email) → { message, dev_code? }
+enable2FA() → { qr_code, secret }
+verify2FA(code) → { message }
+```
 
----
-
-## 🎨 Design System
-
-### Colors:
-- **Brand:** `#00C4A7` (teal)
-- **Background:** `#f8fafc` (light) / `#0f172a` (dark)
-- **Text:** `#0f172a` (light) / `#f1f5f9` (dark)
-
-### Components:
-- Shared header with logo
-- Dark mode toggle
-- Auth modal (login/register)
-- Dashboard with analytics
-- Responsive cards
+### Auth Token Storage
+- `zapkit_auth_token` → localStorage + cookie (path=/, 7-day max-age)
+- `zapkit_user` → localStorage + cookie
+- `zapkit_last_activity` → for idle timeout (30 min)
+- Cross-tab sync via `window.addEventListener('storage', ...)`
 
 ---
 
-## 🔄 Recent Changes
+## 6. Critical Bugs & Fixes (Learn From These)
 
-### Session: 2026-04-30 — Unification to Single App
-- ✅ **MAJOR:** Merged 3 separate React apps into ONE unified app with React Router v7
-- ✅ Created `frontend/` directory with combined dependencies
-- ✅ Created `App.tsx` with BrowserRouter + AuthContext (shared auth state)
-- ✅ Created `pages/HomePage.tsx` (converted from home/index.html to React)
-- ✅ Created `pages/TinyLinkPage.tsx` (from tinylink-pro App.tsx + bug fixes)
-- ✅ Created `pages/QRGeneratorPage.tsx` (from qr-generator-pro App.tsx + bug fixes)
-- ✅ Fixed Bug: `initAutoLogout` was called twice in TinyLink (memory leak) → moved to App.tsx
-- ✅ Fixed Bug: `VITE_QR_APP_URL` env var in footer → replaced with `<Link to="/qr">`
-- ✅ Fixed Bug: `VITE_TINYLINK_APP_URL` env var in footer → replaced with `<Link to="/tinylink">`
-- ✅ Fixed Bug: All localhost:5173/5175 hardcoded URLs → React Router Links
-- ✅ Fixed Bug: `SEOOptimizer` import in QR page (named vs default export)
-- ✅ Fixed Bug: `ResultCard` QR_APP_URL env var → replaced with `/qr`
-- ✅ Moved backend from `tinylink-pro/backend/` to `backend/`
-- ✅ Updated `netlify.toml` (base=frontend, single SPA redirect)
-- ✅ Updated `render.yaml` (rootDir: backend)
-- ✅ Deleted: home/, tinylink-pro/, qr-generator-pro/, build.sh, build-for-netlify.bat, vercel.json
-- ✅ Build: `npm run build` succeeds with 0 TypeScript errors
+### Bug 1: bcrypt 72-byte password crash
+**Error:** `ValueError: password cannot be longer than 72 bytes`  
+**Cause:** passlib 1.7.4 is incompatible with bcrypt >= 4.0  
+**Fix:**
+```
+# requirements.txt
+bcrypt==3.2.2
+passlib[bcrypt]==1.7.4
+```
+AND truncate in auth.py:
+```python
+def hash_password(password: str) -> str:
+    p = password.encode("utf-8")[:72].decode("utf-8", errors="ignore")
+    return pwd_context.hash(p)
+```
+**Status:** Fixed. NEVER upgrade bcrypt without testing.
 
-### Session: Render Deployment Prep (previous)
-- ✅ Created `render.yaml` for full-stack deployment
-- ✅ Fixed `build.sh` for Linux compatibility
-- ✅ Updated all environment variables
-- ✅ Fixed QR Generator TypeScript error (removed createTrackedQR)
-- ✅ Built all apps to `dist/`
+### Bug 2: 2FA QR not scannable
+**Cause:** `two_fa_secret` not saved to DB after generating. `verify_2fa` accepted ANY 6-digit code.  
+**Fix:** Save secret on enable. Use `pyotp.TOTP.verify(code, valid_window=1)` for real validation.
+
+### Bug 3: TypeScript build fails silently
+**tsconfig.app.json has `noUnusedLocals: true` and `noUnusedParameters: true`**  
+Any unused import = build failure on Netlify.  
+Common pattern: add an icon to lucide-react import but forget to use it (or vice versa).  
+**Fix:** Always run `tsc --noEmit` before pushing. Or check Netlify logs for exact line numbers.
+
+### Bug 4: Netlify not auto-deploying
+**Cause:** Netlify deploy_source was "api" — not connected to GitHub webhook.  
+**Symptoms:** Railway auto-deploys from push but Netlify stays on old version.  
+**Fix:** Re-link repo in Netlify UI: Site Config → Build & Deploy → Link repository → shriki95/Zapkit → branch: main
+
+### Bug 5: Dashboard inside tool pages
+**Old bug:** "My Dashboard" button in TinyLink/QR opened internal tab (setTab/setAppTab).  
+**Fix:** Changed to `navigate('/dashboard')` / removed internal dashboard tab from both pages.
+
+### Bug 6: initAutoLogout called twice
+**Old bug:** Auto-logout registered twice in TinyLink → memory leak.  
+**Fix:** Moved to App.tsx — called once for the entire app.
+
+### Bug 7: Hardcoded localhost URLs
+**Old bug:** Links in home page and footer used `http://localhost:5173` etc.  
+**Fix:** All inter-page navigation uses React Router `<Link to="/tinylink">` or `navigate('/tinylink')`.
 
 ---
 
-## 💡 Tips for Next Agent
+## 7. Design System
 
-1. **Single app** - All pages live in `frontend/src/pages/`. No more multiple builds.
-2. **Auth is global** - `AuthContext` in `App.tsx` provides `user`, `setUser`, `showAuthModal`, `dark` to ALL pages via `useAuth()` hook.
-3. **Navigation** - Use `<Link to="/tinylink">` or `<Link to="/qr">`, NOT `<a href>` or `window.location.href`.
-4. **Build** - Run from `frontend/`: `npm install && npm run build` → outputs to `frontend/dist/`
-5. **Backend** - All API endpoints in `backend/main.py`. Run: `cd backend && uvicorn main:app --reload`
-6. **Theme** - `zapkit-theme` in localStorage + cookie, managed globally in `App.tsx`
-7. **Dev** - Frontend: `cd frontend && npm run dev` (port 5173). Backend: `cd backend && uvicorn main:app --reload` (port 8000).
+### Brand Colors
+- **Primary:** `#00C4A7` (teal) — default accent
+- **Hover:** `#00B096`
+- **Background (light):** `#f8fafc` / `#ffffff`
+- **Background (dark):** `#0f172a` / `#1e293b`
+- **Text (light):** `#0f172a` / **Text (dark):** `#f1f5f9`
 
-## 🚀 Deployment Commands
+### Typography
+- **Font:** Plus Jakarta Sans (weights 300–800, loaded from Google Fonts)
+- **Headings:** `font-extrabold tracking-tight` (letter-spacing: -0.025em)
+- **Body:** `font-medium` or `font-normal`
 
-### Local Development:
+### Component Classes (index.css)
+- `.btn-primary` — teal button using `var(--brand)`
+- `.card` — white/dark rounded-2xl with border
+- `.input-field` — consistent text input with brand focus ring
+- `.brand-text`, `.brand-bg`, `.brand-border` — CSS var utilities
+
+### Color Theme Kits (Settings → Preferences)
+5 accent presets stored in `localStorage('zapkit-accent')`:
+| Kit | Color | CSS attr |
+|-----|-------|----------|
+| ZapKit Teal (default) | `#00C4A7` | none |
+| Midnight Indigo | `#6366f1` | `data-accent="indigo"` |
+| Rose Quartz | `#f43f5e` | `data-accent="rose"` |
+| Amber Gold | `#f59e0b` | `data-accent="amber"` |
+| Sky Blue | `#0ea5e9` | `data-accent="sky"` |
+
+Applied instantly via `document.documentElement.setAttribute('data-accent', kit)`.  
+Loaded on app init in `App.tsx useEffect`.
+
+### Icons
+- **Library:** Lucide React exclusively — NO emojis, NO generic icon fonts
+- Common: `Link2`, `QrCode`, `LayoutDashboard`, `Settings`, `Zap`, `TrendingUp`, `Eye`, `Trash2`, `RefreshCw`, `LogIn`, `LogOut`, `Moon`, `Sun`, `CheckSquare`, `Square`
+
+---
+
+## 8. Deployment
+
+### Frontend — Netlify
+```toml
+# netlify.toml
+[build]
+  base    = "frontend"
+  command = "npm install && npm run build"
+  publish = "dist"
+[build.environment]
+  NODE_VERSION = "20"
+  VITE_API_URL = "https://zapkit-backend-production.up.railway.app"
+[[redirects]]
+  from = "/*"
+  to   = "/index.html"
+  status = 200
+```
+**Site:** zapkit2.netlify.app  
+**Auto-deploy:** Linked to GitHub main branch — every push triggers a build.
+
+### Backend — Railway
+- Connected to GitHub, auto-deploys on every push to `main`
+- URL: `zapkit-backend-production.up.railway.app`
+- Build: `pip install -r requirements.txt`
+- Start: `uvicorn main:app --host 0.0.0.0 --port $PORT`
+
+### Required Environment Variables
+
+**Backend (Railway):**
+| Variable | Value |
+|----------|-------|
+| `DATABASE_URL` | PostgreSQL connection string (from Railway DB) |
+| `SECRET_KEY` | Auto-generated random string |
+| `BASE_URL` | `https://zapkit-backend-production.up.railway.app` |
+| `ALLOWED_ORIGINS` | `https://zapkit2.netlify.app` |
+| `EMAIL_MOCK_MODE` | `true` (dev) / `false` (prod with real SMTP) |
+| `SMTP_HOST` | (optional) e.g. smtp.gmail.com |
+| `SMTP_USER` | (optional) your email |
+| `SMTP_PASS` | (optional) app password |
+
+**Frontend (Netlify):**
+| Variable | Value |
+|----------|-------|
+| `VITE_API_URL` | `https://zapkit-backend-production.up.railway.app` |
+
+---
+
+## 9. Local Development
+
 ```bash
 # Terminal 1 — Backend
 cd backend
 pip install -r requirements.txt
 uvicorn main:app --reload --port 8000
+# API at http://localhost:8000, docs at http://localhost:8000/docs
 
 # Terminal 2 — Frontend
 cd frontend
 npm install
 npm run dev
-# → http://localhost:5173
+# App at http://localhost:5173
 ```
 
-### Netlify (Frontend):
-```bash
-cd frontend && npm install && npm run build
-# Upload frontend/dist/ to Netlify
-# OR connect repo: base=frontend, build=npm run build, publish=dist
+**Local env:** frontend reads `VITE_API_URL` from `.env.local`:
 ```
-
-### Render (Backend):
-- Connect repo, use render.yaml (auto-detects)
-- Set env vars: DATABASE_URL, BASE_URL, ALLOWED_ORIGINS
+VITE_API_URL=http://localhost:8000
+```
 
 ---
 
-## 📞 Support
+## 10. Deploying a New App From This Template
 
-- Backend API docs: `/docs` (FastAPI auto-generated)
-- Health check: `/health`
-- All endpoints: `/api/*`
+This section is designed to help build other apps at the same quality level, fast.
+
+### Minimal Stack Checklist
+- [ ] Clone repo structure: `frontend/` + `backend/`
+- [ ] `frontend/package.json` — copy dependencies (react, tailwind, lucide, framer-motion, recharts)
+- [ ] `netlify.toml` — set `base=frontend`, SPA redirect
+- [ ] `render.yaml` or Railway — set `rootDir=backend`
+- [ ] `backend/requirements.txt` — fastapi, uvicorn, sqlalchemy, asyncpg, pyjwt, passlib, **bcrypt==3.2.2**, pyotp, qrcode
+- [ ] `backend/database.py` — async engine, `init_db()` with safe migrations
+- [ ] `backend/auth.py` — hash_password (72-byte truncation), verify_password, JWT encode/decode
+- [ ] `frontend/src/lib/auth.ts` — apiFetch(), token in localStorage + cookies
+- [ ] `frontend/index.html` — Google Fonts link (Plus Jakarta Sans)
+- [ ] `frontend/src/index.css` — CSS variables, Tailwind config, font
+
+### Patterns That Work Well
+1. **AuthContext** in root App.tsx — share user/dark/modal state to all pages without prop drilling
+2. **CSS custom properties for theming** — `var(--brand)` instead of hardcoded colors
+3. **Safe DB migrations** in `init_db()` using try/except — never break existing deployments
+4. **`noUnusedLocals: true`** in tsconfig — catches dead imports before Netlify fails
+5. **ScrollToTop component** in App.tsx using `useLocation` — smooth UX on navigation
+6. **React Router `<Link>`** for all internal navigation — never `window.location.href` or hardcoded URLs
+7. **apiFetch() wrapper** with auto-auth header — all API calls in one place
+8. **EMAIL_MOCK_MODE** env var — dev mode returns code in API response; prod uses SMTP
+9. **`deploy_source: api`** for Netlify — if auto-deploy breaks, trigger via `npx @netlify/mcp@latest`
+10. **Delete endpoints** always soft-delete (`is_active = False`) — never hard DELETE from DB
+
+### Common Mistakes to Avoid
+- **Never upgrade bcrypt** above 3.2.2 without testing passlib compatibility
+- **Never hardcode localhost** URLs in frontend — always use env vars or React Router
+- **Never call `initAutoLogout()` twice** — only call it once at the app root
+- **Never forget to import** icons you use (noUnusedLocals will fail the build)
+- **Never call `setTab('dashboard')`** inside a sub-page to navigate — use `navigate('/dashboard')`
+- **Never commit `two_fa_secret`** or other secrets to git
+- **Never use emojis** in UI — use Lucide React icons exclusively
+- **Never use `<a href>` for internal links** — use React Router `<Link to="/">`
 
 ---
 
-**Status:** 🟢 Ready for deployment
-**Last Build:** Successful
-**Next Action:** Deploy to Render or connect to Firebase
+## 11. Recent Changes Log
+
+### 2026-05-01 — Major Feature Batch
+- **Backend:** Added `DELETE /api/dashboard/links/{code}` and `DELETE /api/dashboard/qr/{code}` (auth-required soft delete)
+- **Backend:** Added real TOTP 2FA with pyotp (secret saved to DB, `verify()` with valid_window=1)
+- **Backend:** Added `POST /api/auth/change-password`
+- **Backend:** Fixed bcrypt 72-byte crash (pinned bcrypt==3.2.2, added truncation in auth.py)
+- **Frontend:** New standalone `/dashboard` route (DashboardPage.tsx) — Analytics + Settings tabs in one place
+- **Frontend:** DashboardPage — multi-item selection (checkboxes), compare multiple links/QR in one chart
+- **Frontend:** DashboardPage — delete button on hover, confirmation modal
+- **Frontend:** DashboardPage — removed "Shorten a Link" CTA, kept only Refresh
+- **Frontend:** Settings.tsx — 5 color theme kits (teal/indigo/rose/amber/sky) saved to localStorage
+- **Frontend:** Settings.tsx — real account stats from API (no more hardcoded numbers)
+- **Frontend:** Settings.tsx — functional Change Password section with show/hide toggles
+- **Frontend:** App.tsx — loads accent color kit from localStorage on mount
+- **Frontend:** index.css — CSS custom properties for theming, Plus Jakarta Sans font
+- **Frontend:** HomePage.tsx — "How it works" rewritten for both tools; registration CTA added
+- **Frontend:** TinyLink/QR — Dashboard tab removed from internal nav; user button → navigate('/dashboard')
+- **Frontend:** Fixed TypeScript build errors (Trash2, Bell imports missing; UserIcon unused)
+
+### 2026-04-30 — Unified Single App
+- Merged 3 separate React apps (home, tinylink-pro, qr-generator-pro) into one React Router app
+- Created AuthContext, ScrollToTop, GDPRBanner at App.tsx level
+- All cross-app links converted from localhost URLs to React Router Links
+
+---
+
+## 12. For the Next AI Agent
+
+**Read this before doing anything:**
+
+1. **The app is a single React SPA** at `frontend/`. Never create separate apps.
+2. **`useAuth()`** gives you everything: user, setUser, dark, setDark, showAuthModal, authMode.
+3. **All navigation** must use `<Link to="...">` or `navigate('...')` — never `window.location.href`.
+4. **TypeScript is strict.** `noUnusedLocals` and `noUnusedParameters` are enabled. Unused imports = build failure.
+5. **Netlify auto-deploys** from GitHub `main` branch. Check build logs if deploy fails.
+6. **Railway auto-deploys** backend from GitHub `main` branch.
+7. **Never hardcode `#00C4A7`** in new components — use `var(--brand)` or `text-[#00C4A7]` for Tailwind.
+8. **No emojis** anywhere in the UI. Use Lucide React icons.
+9. **Font:** Plus Jakarta Sans. Already loaded. Just use `font-family: 'Plus Jakarta Sans'` or let it inherit.
+10. **Dashboard is at `/dashboard`** — standalone page. Never embed it as a tab inside tool pages.
+11. **Settings is inside DashboardPage** (second tab). Don't create a separate `/settings` route.
+12. **Color theme kits** are applied via `data-accent` HTML attribute + CSS vars in `index.css`.
+13. **Password reset** returns `dev_code` in response when `EMAIL_MOCK_MODE=true` — shown in AuthModal amber box.
+14. **2FA** uses real TOTP (pyotp). Secret stored in `users.two_fa_secret`. Verify with `valid_window=1`.
+15. **Delete** is always soft (`is_active=False`) — never hard DELETE.

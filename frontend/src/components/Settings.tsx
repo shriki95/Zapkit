@@ -45,6 +45,22 @@ export default function Settings() {
   const [emailNotifications, setEmailNotifications] = useState(true)
   const [analyticsEmails, setAnalyticsEmails] = useState(false)
   const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system')
+  const [accentKit, setAccentKit] = useState<string>(() => localStorage.getItem('zapkit-accent') ?? 'teal')
+
+  const ACCENT_KITS = [
+    { id: 'teal',   name: 'ZapKit Teal',   color: '#00C4A7', desc: 'Original brand — always fresh' },
+    { id: 'indigo', name: 'Midnight Indigo', color: '#6366f1', desc: 'Deep focus, professional tone' },
+    { id: 'rose',   name: 'Rose Quartz',   color: '#f43f5e', desc: 'Bold and expressive' },
+    { id: 'amber',  name: 'Amber Gold',    color: '#f59e0b', desc: 'Warm and premium' },
+    { id: 'sky',    name: 'Sky Blue',      color: '#0ea5e9', desc: 'Clean and trustworthy' },
+  ]
+
+  const applyAccent = (kit: string) => {
+    setAccentKit(kit)
+    localStorage.setItem('zapkit-accent', kit)
+    if (kit === 'teal') document.documentElement.removeAttribute('data-accent')
+    else document.documentElement.setAttribute('data-accent', kit)
+  }
 
   const handle2FAEnable = async () => {
     setLoading(true)
@@ -536,6 +552,42 @@ export default function Settings() {
                     className="w-5 h-5 text-[#00C4A7] focus:ring-[#00C4A7]"
                   />
                 </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Color Theme Kits */}
+          <div className="card p-6">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1 flex items-center gap-2">
+              <Palette size={20} />
+              Color Theme
+            </h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+              Choose an accent color kit. Your ZapKit branding and identity remain consistent across all themes.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {ACCENT_KITS.map(kit => (
+                <button
+                  key={kit.id}
+                  onClick={() => applyAccent(kit.id)}
+                  className={`flex items-center gap-3 p-3.5 rounded-xl border-2 transition-all text-left ${
+                    accentKit === kit.id
+                      ? 'border-current shadow-md'
+                      : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                  }`}
+                  style={accentKit === kit.id ? { borderColor: kit.color } : {}}
+                >
+                  <div className="w-10 h-10 rounded-xl flex-shrink-0 shadow-sm" style={{ background: kit.color }} />
+                  <div className="min-w-0">
+                    <div className="font-semibold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                      {kit.name}
+                      {accentKit === kit.id && (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white" style={{ background: kit.color }}>Active</span>
+                      )}
+                    </div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400 truncate">{kit.desc}</div>
+                  </div>
+                </button>
               ))}
             </div>
           </div>

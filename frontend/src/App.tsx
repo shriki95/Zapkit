@@ -87,6 +87,13 @@ export default function App() {
     localStorage.setItem('zapkit-theme', dark ? 'dark' : 'light')
   }, [dark])
 
+  // Apply accent color kit on mount
+  useEffect(() => {
+    const accent = localStorage.getItem('zapkit-accent') ?? 'teal'
+    if (accent !== 'teal') document.documentElement.setAttribute('data-accent', accent)
+    else document.documentElement.removeAttribute('data-accent')
+  }, [])
+
   // Cross-tab theme sync
   useEffect(() => {
     const handler = (e: StorageEvent) => {

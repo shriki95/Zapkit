@@ -1027,6 +1027,40 @@ async def get_dashboard_qr_analytics(
     return _stats_from_qr_scans(list(scans_result.scalars().all()))
 
 
+@app.delete("/api/dashboard/links/{short_code}")
+async def delete_dashboard_link(
+    short_code: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(
+        select(Link).where(Link.short_code == short_code, Link.user_id == current_user.id)
+    )
+    link = result.scalar_one_or_none()
+    if not link:
+        raise HTTPException(status_code=404, detail="Link not found")
+    link.is_active = False
+    await db.commit()
+    return {"ok": True}
+
+
+@app.delete("/api/dashboard/qr/{qr_code}")
+async def delete_dashboard_qr(
+    qr_code: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(
+        select(QRCode).where(QRCode.qr_code == qr_code, QRCode.user_id == current_user.id)
+    )
+    qr = result.scalar_one_or_none()
+    if not qr:
+        raise HTTPException(status_code=404, detail="QR code not found")
+    qr.is_active = False
+    await db.commit()
+    return {"ok": True}
+
+
 @app.post("/api/auth/2fa/enable")
 async def enable_2fa(
     current_user: User = Depends(get_current_user),

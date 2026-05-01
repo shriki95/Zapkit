@@ -1,57 +1,93 @@
 @import 'tailwindcss';
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* ── Luxury Typography ────────────────────────────────────────────────────── */
 @layer base {
   :root {
+    /* Brand — Teal (default) */
     --brand: #00C4A7;
     --brand-hover: #00B096;
+    --brand-light: rgba(0,196,167,0.12);
+    --brand-border: rgba(0,196,167,0.25);
   }
+
+  /* Accent theme kits */
+  [data-accent="indigo"] { --brand: #6366f1; --brand-hover: #4f46e5; --brand-light: rgba(99,102,241,0.12); --brand-border: rgba(99,102,241,0.25); }
+  [data-accent="rose"]   { --brand: #f43f5e; --brand-hover: #e11d48; --brand-light: rgba(244,63,94,0.12);  --brand-border: rgba(244,63,94,0.25); }
+  [data-accent="amber"]  { --brand: #f59e0b; --brand-hover: #d97706; --brand-light: rgba(245,158,11,0.12); --brand-border: rgba(245,158,11,0.25); }
+  [data-accent="sky"]    { --brand: #0ea5e9; --brand-hover: #0284c7; --brand-light: rgba(14,165,233,0.12); --brand-border: rgba(14,165,233,0.25); }
+
+  html {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
   body {
     @apply bg-white text-slate-900 antialiased;
-    font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   }
   .dark body {
     @apply bg-slate-950 text-slate-100;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    letter-spacing: -0.025em;
   }
 }
 
 @layer utilities {
   .btn-primary {
-    @apply bg-[#00C4A7] hover:bg-[#00B096] text-white font-semibold px-5 py-2.5 rounded-xl transition-colors duration-200 cursor-pointer;
+    @apply font-semibold px-5 py-2.5 rounded-xl transition-colors duration-200 cursor-pointer text-white;
+    background: var(--brand);
+  }
+  .btn-primary:hover {
+    background: var(--brand-hover);
   }
   .card {
     @apply bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm;
   }
   .input-field {
-    @apply w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00C4A7] transition;
+    @apply w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none transition;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   }
+  .input-field:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--brand);
+    border-color: var(--brand);
+  }
+  .brand-text { color: var(--brand); }
+  .brand-bg { background: var(--brand); }
+  .brand-border { border-color: var(--brand); }
 }
 
-/* SSE pulse animation */
+/* ── Animations ───────────────────────────────────────────────────────────── */
 @keyframes pulse-ring {
   0% { transform: scale(0.8); opacity: 1; }
   100% { transform: scale(2); opacity: 0; }
 }
-.pulse-ring {
-  animation: pulse-ring 1.5s ease-out infinite;
-}
+.pulse-ring { animation: pulse-ring 1.5s ease-out infinite; }
 
-/* Smooth tab underline */
-.tab-active {
-  position: relative;
-}
+.tab-active { position: relative; }
 .tab-active::after {
   content: '';
   position: absolute;
-  bottom: -2px;
-  left: 0;
-  right: 0;
+  bottom: -2px; left: 0; right: 0;
   height: 2px;
-  background: #00C4A7;
+  background: var(--brand);
   border-radius: 2px;
 }
 
-/* Ad placeholder styling */
 .ad-placeholder {
   @apply flex items-center justify-center bg-slate-100 dark:bg-slate-800 border border-dashed border-slate-300 dark:border-slate-600 rounded-xl text-xs text-slate-400 uppercase tracking-widest font-medium;
+}
+
+/* ── Mobile: prevent field clipping ──────────────────────────────────────── */
+@media (max-width: 640px) {
+  input, select, textarea {
+    font-size: 16px !important; /* prevents iOS zoom */
+  }
+  .overflow-x-hidden { overflow-x: hidden; }
 }

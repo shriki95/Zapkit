@@ -246,22 +246,75 @@ export default function HomePage() {
       </section>
 
       {/* ── How it works ── */}
-      <section style={{ padding: '3rem 1.5rem', background: dark ? '#1e293b' : '#ffffff', borderTop: `1px solid ${dark ? '#334155' : '#e2e8f0'}` }}>
-        <div style={{ maxWidth: 860, margin: '0 auto', textAlign: 'center' }}>
-          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#00C4A7', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>Super simple</div>
-          <h2 style={{ fontSize: 'clamp(1.3rem, 4vw, 1.8rem)', fontWeight: 800, color: dark ? '#f1f5f9' : '#0f172a', marginBottom: '2rem' }}>Get started in seconds</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(180px, 100%), 1fr))', gap: '1.5rem' }}>
-            {[
-              { step: '1', icon: '🔗', title: 'Paste your URL', desc: 'Drop any long link into the box — no account needed' },
-              { step: '2', icon: '⚡', title: 'Get your short link', desc: 'Your branded link is ready in under a second' },
-              { step: '3', icon: '📊', title: 'Track your results', desc: 'See clicks, devices, countries — all in real time' },
-            ].map((s) => (
-              <div key={s.step} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'rgba(0,196,167,0.1)', border: '2px solid rgba(0,196,167,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem' }}>{s.icon}</div>
-                <div style={{ fontWeight: 700, fontSize: '0.9rem', color: dark ? '#f1f5f9' : '#0f172a' }}>{s.title}</div>
-                <div style={{ fontSize: '0.78rem', color: dark ? '#94a3b8' : '#64748b', lineHeight: 1.5 }}>{s.desc}</div>
+      <section style={{ padding: '3.5rem 1.5rem', background: dark ? '#1e293b' : '#ffffff', borderTop: `1px solid ${dark ? '#334155' : '#e2e8f0'}` }}>
+        <div style={{ maxWidth: 860, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+            <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#00C4A7', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8 }}>Simple by design</div>
+            <h2 style={{ fontSize: 'clamp(1.3rem, 4vw, 1.8rem)', fontWeight: 800, color: dark ? '#f1f5f9' : '#0f172a', marginBottom: 8 }}>Everything you need, nothing you don't</h2>
+            <p style={{ fontSize: '0.875rem', color: dark ? '#94a3b8' : '#64748b', maxWidth: 480, margin: '0 auto' }}>
+              Use both tools freely — no account required. Create an account only when you want a professional analytics dashboard.
+            </p>
+          </div>
+          {/* Two-column: TinyLink + QR */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(340px,100%), 1fr))', gap: '1.5rem' }}>
+            {/* TinyLink steps */}
+            <div style={{ background: dark ? '#0f172a' : '#f8fafc', borderRadius: 16, padding: '1.75rem', border: `1px solid ${dark ? '#334155' : '#e2e8f0'}` }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: '1.25rem' }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(0,196,167,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#00C4A7" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                </div>
+                <span style={{ fontWeight: 700, fontSize: '0.95rem', color: dark ? '#f1f5f9' : '#0f172a' }}>TinyLink Pro</span>
               </div>
-            ))}
+              {[
+                { n: '01', title: 'Paste any URL', desc: 'Drop a long link into the field — no account required to shorten.' },
+                { n: '02', title: 'Get a branded short link', desc: 'Your link is ready in milliseconds, with a custom alias option.' },
+                { n: '03', title: 'Track performance', desc: 'Register for a free account to unlock real-time click analytics, device breakdown, and country data.' },
+              ].map(s => (
+                <div key={s.n} style={{ display: 'flex', gap: 14, marginBottom: '1rem' }}>
+                  <div style={{ flexShrink: 0, width: 28, height: 28, borderRadius: 8, background: 'rgba(0,196,167,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 800, color: '#00C4A7' }}>{s.n}</div>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: '0.85rem', color: dark ? '#f1f5f9' : '#0f172a', marginBottom: 2 }}>{s.title}</div>
+                    <div style={{ fontSize: '0.78rem', color: dark ? '#94a3b8' : '#64748b', lineHeight: 1.55 }}>{s.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {/* QR steps */}
+            <div style={{ background: dark ? '#0f172a' : '#f8fafc', borderRadius: 16, padding: '1.75rem', border: `1px solid ${dark ? '#334155' : '#e2e8f0'}` }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: '1.25rem' }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(0,196,167,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#00C4A7" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h.01M14 17h.01M17 14h.01M17 17h.01M20 14h.01"/></svg>
+                </div>
+                <span style={{ fontWeight: 700, fontSize: '0.95rem', color: dark ? '#f1f5f9' : '#0f172a' }}>QR Generator Pro</span>
+              </div>
+              {[
+                { n: '01', title: 'Choose a QR type', desc: 'Select from 12+ types: URL, contact card, Wi-Fi, WhatsApp, calendar events, and more.' },
+                { n: '02', title: 'Design and customize', desc: 'Add your logo, choose colors, and pick a frame style. Export in PNG or SVG at any resolution.' },
+                { n: '03', title: 'Track scan activity', desc: 'Register for free to monitor who scans your QR codes, from which devices and countries.' },
+              ].map(s => (
+                <div key={s.n} style={{ display: 'flex', gap: 14, marginBottom: '1rem' }}>
+                  <div style={{ flexShrink: 0, width: 28, height: 28, borderRadius: 8, background: 'rgba(0,196,167,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontWeight: 800, color: '#00C4A7' }}>{s.n}</div>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: '0.85rem', color: dark ? '#f1f5f9' : '#0f172a', marginBottom: 2 }}>{s.title}</div>
+                    <div style={{ fontSize: '0.78rem', color: dark ? '#94a3b8' : '#64748b', lineHeight: 1.55 }}>{s.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* Registration CTA */}
+          <div style={{ marginTop: '2rem', padding: '1.25rem 1.5rem', borderRadius: 14, background: 'rgba(0,196,167,0.06)', border: '1px solid rgba(0,196,167,0.2)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: '0.9rem', color: dark ? '#f1f5f9' : '#0f172a', marginBottom: 3 }}>Want a full analytics dashboard?</div>
+              <div style={{ fontSize: '0.78rem', color: dark ? '#94a3b8' : '#64748b' }}>Create a free account to track every click, scan, device, and country — all in one place.</div>
+            </div>
+            <button
+              onClick={() => { setAuthMode('register'); setShowAuthModal(true) }}
+              style={{ flexShrink: 0, background: '#00C4A7', color: '#fff', border: 'none', borderRadius: 10, padding: '9px 20px', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
+            >
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+              Create Free Account
+            </button>
           </div>
         </div>
       </section>
