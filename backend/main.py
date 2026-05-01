@@ -10,7 +10,6 @@ from datetime import datetime, timedelta, timezone
 from typing import AsyncGenerator
 
 from fastapi import Cookie, Depends, FastAPI, HTTPException, Request, Response
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse, StreamingResponse
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -64,59 +63,46 @@ load_dotenv()
 
 BASE_URL = os.getenv("BASE_URL", "http://localhost:8000")
 
-# Always allow these origins regardless of env var
-_ALWAYS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://localhost:5175",
-    "http://localhost:8080",
-    "https://zapkit2.netlify.app",
-    "https://zapkit.netlify.app",
-]
-_env_origins = [
-    o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()
-]
-ALLOWED_ORIGINS = list(set(_ALWAYS_ALLOWED_ORIGINS + _env_origins))
+app = FastAPI(title="ZapKit API", version="1.0.0")
 
-app = FastAPI(title="TinyLink Pro API", version="1.0.0")
 
-# CORS — must be first (outermost) middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-    expose_headers=["X-Process-Time"],
-)
-
-# SSE subscribers: short_code → list of asyncio.Queue
-_sse_subscribers: dict[str, list[asyncio.Queue]] = defaultdict(list)
-
+# ── CORS + Security headers (single middleware, no conflicts) ─────────────────
 
 @app.middleware("http")
-async def security_headers(request: Request, call_next):
+async def cors_and_security(request: Request, call_next):
+    origin = request.headers.get("origin", "")
+
+    # Handle CORS preflight immediately — no route handler needed
+    if request.method == "OPTIONS":
+        return Response(
+            status_code=200,
+            headers={
+                "Access-Control-Allow-Origin": origin or "*",
+                "Access-Control-Allow-Credentials": "true",
+                "Access-Control-Allow-Methods": "DELETE, GET, HEAD, OPTIONS, PATCH, POST, PUT",
+                "Access-Control-Allow-Headers": "Authorization, Content-Type, Accept, Origin, X-Requested-With",
+                "Access-Control-Max-Age": "86400",
+            },
+        )
+
     response = await call_next(request)
+
+    # CORS headers on every response
+    if origin:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+
+    # Security headers
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     response.headers["Permissions-Policy"] = "geolocation=(), camera=()"
-    response.headers["X-XSS-Protection"] = "1; mode=block"
+
     return response
 
 
-@app.options("/{rest_of_path:path}")
-async def preflight_handler(request: Request, rest_of_path: str):
-    """Explicit OPTIONS handler to ensure CORS preflight always succeeds"""
-    return Response(
-        status_code=200,
-        headers={
-            "Access-Control-Allow-Origin": request.headers.get("origin", "*"),
-            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
-            "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
-            "Access-Control-Allow-Credentials": "true",
-            "Access-Control-Max-Age": "86400",
-        },
-    )
+# SSE subscribers: short_code → list of asyncio.Queue
+_sse_subscribers: dict[str, list[asyncio.Queue]] = defaultdict(list)
 
 
 @app.on_event("startup")
