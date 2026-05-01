@@ -187,20 +187,19 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
                 origin = request.headers.get("Origin")
                 referer = request.headers.get("Referer")
                 
-                # Allow localhost and configured origins
-                allowed_origins = os.getenv(
-                    "ALLOWED_ORIGINS",
-                    "http://localhost:5173,http://localhost:5175,http://localhost:8080,https://zapkit2.netlify.app,https://zapkit.netlify.app"
-                ).split(",")
-                allowed_origins_stripped = [o.strip() for o in allowed_origins]
-                # Always allow netlify.app subdomains (production)
-                always_allowed = ["localhost", "127.0.0.1", "netlify.app", "railway.app"]
+                # Always-allowed origin substrings (production + dev)
+                always_allowed = [
+                    "localhost", "127.0.0.1",
+                    "netlify.app", "railway.app",
+                    "zapkit2.netlify.app", "zapkit.netlify.app",
+                ]
+                _env_origins = [
+                    o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()
+                ]
+                all_allowed = always_allowed + _env_origins
 
                 if origin:
-                    if any(
-                        allowed in origin
-                        for allowed in always_allowed + allowed_origins_stripped
-                    ):
+                    if any(allowed in origin for allowed in all_allowed):
                         pass  # Allow
                     else:
                         return JSONResponse(
@@ -208,10 +207,7 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
                             content={"detail": "Invalid origin"}
                         )
                 elif referer:
-                    if any(
-                        allowed in referer
-                        for allowed in always_allowed + allowed_origins_stripped
-                    ):
+                    if any(allowed in referer for allowed in all_allowed):
                         pass  # Allow
                     else:
                         return JSONResponse(
