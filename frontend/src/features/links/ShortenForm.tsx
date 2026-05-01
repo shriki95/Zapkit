@@ -152,14 +152,15 @@ export default function ShortenForm({ onResult, onRefreshLinks, onLoadingChange 
             />
           </div>
         </div>
-        <div>
+        <div className="min-w-0">
           <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Expiry Date (optional)</label>
           <input
             type="date"
             value={expiresAt}
             onChange={e => setExpiresAt(e.target.value)}
             min={new Date().toISOString().split('T')[0]}
-            className="input-field text-sm py-2"
+            className="input-field text-sm py-2 w-full max-w-full"
+            style={{ minWidth: 0 }}
           />
         </div>
       </div>

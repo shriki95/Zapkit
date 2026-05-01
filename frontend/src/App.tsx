@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { getUser, initAutoLogout, type User } from './lib/auth'
+import { applyAccentOverride } from './lib/theme'
 import HomePage from './pages/HomePage'
 import TinyLinkPage from './pages/TinyLinkPage'
 import QRGeneratorPage from './pages/QRGeneratorPage'
@@ -87,11 +88,10 @@ export default function App() {
     localStorage.setItem('zapkit-theme', dark ? 'dark' : 'light')
   }, [dark])
 
-  // Apply accent color kit on mount
+  // Apply accent color kit on mount (CSS var + style override for hardcoded classes)
   useEffect(() => {
     const accent = localStorage.getItem('zapkit-accent') ?? 'teal'
-    if (accent !== 'teal') document.documentElement.setAttribute('data-accent', accent)
-    else document.documentElement.removeAttribute('data-accent')
+    applyAccentOverride(accent)
   }, [])
 
   // Cross-tab theme sync

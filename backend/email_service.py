@@ -6,11 +6,10 @@ Set EMAIL_MOCK_MODE=true for local development (prints to console).
 
 import json
 import os
-import urllib.request
-import urllib.error
 import base64
 from io import BytesIO
 from typing import Optional
+import httpx
 import qrcode
 from dotenv import load_dotenv
 
@@ -43,33 +42,26 @@ async def _send_resend(to_email: str, subject: str, html_body: str) -> bool:
         print("❌ RESEND_API_KEY not set — email not sent.")
         return False
 
-    payload = json.dumps({
+    payload = {
         "from":    f"{FROM_NAME} <{FROM_EMAIL}>",
         "to":      [to_email],
         "subject": subject,
         "html":    html_body,
-    }).encode("utf-8")
-
-    req = urllib.request.Request(
-        "https://api.resend.com/emails",
-        data=payload,
-        headers={
-            "Authorization": f"Bearer {RESEND_API_KEY}",
-            "Content-Type":  "application/json",
-        },
-        method="POST",
-    )
+    }
 
     try:
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            ok = resp.status in (200, 201)
-            if ok:
-                print(f"✅ Email sent via Resend to {to_email}")
-            return ok
-    except urllib.error.HTTPError as e:
-        body = e.read().decode("utf-8", errors="ignore")
-        print(f"❌ Resend HTTP {e.code}: {body}")
-        return False
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.post(
+                "https://api.resend.com/emails",
+                json=payload,
+                headers={"Authorization": f"Bearer {RESEND_API_KEY}"},
+            )
+        ok = resp.status_code in (200, 201)
+        if ok:
+            print(f"✅ Email sent via Resend to {to_email}")
+        else:
+            print(f"❌ Resend HTTP {resp.status_code}: {resp.text}")
+        return ok
     except Exception as e:
         print(f"❌ Resend error: {e}")
         return False

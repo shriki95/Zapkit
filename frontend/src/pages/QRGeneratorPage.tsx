@@ -352,6 +352,18 @@ export default function QRGeneratorPage() {
       )}
 
       {/* Generate Tab */}
+      {/* Horizontal ad banner - between hero and main content */}
+      {appTab === 'generate' && (
+        <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 py-2 px-4">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-[10px] text-slate-400 text-center mb-1">Advertisement</div>
+            <div className="bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 min-h-[90px] flex items-center justify-center">
+              <div className="text-center text-slate-400 text-xs">Google Ad - 728x90 Leaderboard</div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {appTab === 'generate' && (
         <main className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-[520px_1fr]" role="tabpanel">
           <section className="space-y-4">
@@ -521,6 +533,16 @@ export default function QRGeneratorPage() {
                     Track This QR Code
                   </button>
                   <p className="mt-2 text-center text-xs text-slate-500 dark:text-slate-400">Sign up to track scans and view analytics</p>
+                </div>
+              )}
+
+              {/* Ad below QR result */}
+              {generatedPayload && (
+                <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-600 dark:bg-slate-800">
+                  <div className="text-xs text-slate-500 dark:text-slate-400 mb-2 text-center">Advertisement</div>
+                  <div className="bg-white dark:bg-slate-900 rounded border min-h-[160px] flex items-center justify-center">
+                    <div className="text-center text-slate-400 text-sm">Google Ad<br/>300x150</div>
+                  </div>
                 </div>
               )}
             </section>

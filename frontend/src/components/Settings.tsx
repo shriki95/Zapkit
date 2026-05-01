@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { User, Shield, Palette, CheckCircle, AlertCircle, Copy, Check, Lock, Eye, EyeOff, Link2, QrCode, TrendingUp, BarChart3, Trash2, Bell, Save } from 'lucide-react'
 import { enable2FA, verify2FA, getUser, changePassword, getDashboard, type User as UserType } from '../lib/auth'
 import { useAuth } from '../App'
+import { applyAccentOverride } from '../lib/theme'
 
 export default function Settings() {
   const { dark, setDark } = useAuth()
@@ -72,8 +73,7 @@ export default function Settings() {
   const saveAccent = () => {
     setAccentKit(pendingAccent)
     localStorage.setItem('zapkit-accent', pendingAccent)
-    if (pendingAccent === 'teal') document.documentElement.removeAttribute('data-accent')
-    else document.documentElement.setAttribute('data-accent', pendingAccent)
+    applyAccentOverride(pendingAccent)
     setThemeSaved(true)
     setTimeout(() => setThemeSaved(false), 2000)
   }

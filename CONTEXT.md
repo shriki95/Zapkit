@@ -80,7 +80,7 @@ ZapKit/
 │   ├── security.py                    # Input sanitization, validation
 │   ├── security_middleware.py         # Rate limiting, CORS, DDoS protection
 │   ├── analytics.py                   # Click/scan recording
-│   ├── email_service.py               # SMTP (mock mode when EMAIL_MOCK_MODE=true)
+│   ├── email_service.py               # Resend API via httpx async (mock mode when EMAIL_MOCK_MODE=true)
 │   ├── encryption.py
 │   ├── shortener.py                   # Short code generation
 │   └── requirements.txt
@@ -117,10 +117,13 @@ const { user, setUser, dark, setDark, showAuthModal, setShowAuthModal, authMode,
 
 ### Theme System
 - **Dark mode:** `document.documentElement.classList.toggle('dark', dark)` + cookie `zapkit-theme`
-- **Accent color kits:** `document.documentElement.setAttribute('data-accent', kit)` + localStorage `zapkit-accent`
+- **Accent color kits:** managed via `applyAccentOverride(accent)` in `lib/theme.ts`
+  - Sets `data-accent` on `<html>` for CSS variable overrides (`.btn-primary`, `.input-field` focus, etc.)
+  - Injects a `<style id="zapkit-accent-style">` tag that overrides all hardcoded Tailwind classes (`bg-[#00C4A7]`, `text-[#00C4A7]`, etc. with `!important`)
+  - This is needed because Tailwind compiles arbitrary-value classes to static CSS — CSS vars alone can't override them
 - **CSS variables in index.css:** `--brand`, `--brand-hover`, `--brand-light`, `--brand-border`
 - **5 kits:** teal (default), indigo, rose, amber, sky
-- App.tsx loads the accent on mount; Settings.tsx `applyAccent()` function applies it live
+- App.tsx loads the accent on mount via `applyAccentOverride`; Settings.tsx `saveAccent()` calls it live
 
 ### Typography
 - **Font:** Plus Jakarta Sans (Google Fonts, loaded in index.html)
@@ -341,10 +344,8 @@ Loaded on app init in `App.tsx useEffect`.
 | `SECRET_KEY` | Auto-generated random string |
 | `BASE_URL` | `https://zapkit-backend-production.up.railway.app` |
 | `ALLOWED_ORIGINS` | `https://zapkit2.netlify.app` |
-| `EMAIL_MOCK_MODE` | `true` (dev) / `false` (prod with real SMTP) |
-| `SMTP_HOST` | (optional) e.g. smtp.gmail.com |
-| `SMTP_USER` | (optional) your email |
-| `SMTP_PASS` | (optional) app password |
+| `EMAIL_MOCK_MODE` | `true` (dev) / `false` (prod — enables real Resend email) |
+| `RESEND_API_KEY` | Resend API key (from resend.com — required when `EMAIL_MOCK_MODE=false`) |
 
 **Frontend (Netlify):**
 | Variable | Value |
@@ -418,6 +419,20 @@ This section is designed to help build other apps at the same quality level, fas
 
 ## 11. Recent Changes Log
 
+### 2026-05-01 (v3) — UX Polish + Ads + Email Fix + Theme Fix
+- **Frontend:** Settings.tsx — `saveAccent()` now calls `applyAccentOverride()` from `lib/theme.ts`
+- **Frontend:** `lib/theme.ts` (new) — `applyAccentOverride()` injects `<style>` tag to override hardcoded Tailwind color classes; root cause fix for accent kits not working
+- **Frontend:** App.tsx — accent kit loaded on mount via `applyAccentOverride()` instead of just `data-accent` setAttribute
+- **Frontend:** HomePage.tsx — username dropdown (same pattern as TinyLink/QR); hero copy rewritten to sound human; font fixed to Plus Jakarta Sans; testimonials rewritten
+- **Frontend:** DashboardPage.tsx — delete buttons always visible (removed `opacity-0 group-hover:opacity-100`)
+- **Frontend:** ShortenForm.tsx — Expiry Date input fixed for mobile (min-w-0, max-w-full, style minWidth:0)
+- **Frontend:** TinyLinkPage.tsx — 2 additional ad placements (horizontal banner after hero; pre-footer leaderboard)
+- **Frontend:** QRGeneratorPage.tsx — 2 additional ad placements (horizontal banner after hero; ad below generated QR)
+- **Backend:** email_service.py — rewritten to use Resend API via `httpx` async (was blocking `urllib.request`)
+- **Backend:** email_service.py — removed SMTP fallback; uses `RESEND_API_KEY` + `EMAIL_MOCK_MODE` env vars
+- **Copy:** Em-dashes (—) replaced with hyphens throughout UI; AI-sounding copy humanized across all pages
+- **Railway:** Set `EMAIL_MOCK_MODE=false` and add `RESEND_API_KEY` to enable real email sending
+
 ### 2026-05-01 (v2) — Dashboard Copy/Download + QR Auto-Save
 - **Frontend:** DashboardPage — copy short link to clipboard with "Copied!" visual feedback (2 s reset)
 - **Frontend:** DashboardPage — copy QR content to clipboard with same feedback
@@ -467,8 +482,8 @@ This section is designed to help build other apps at the same quality level, fas
 9. **Font:** Plus Jakarta Sans. Already loaded. Just use `font-family: 'Plus Jakarta Sans'` or let it inherit.
 10. **Dashboard is at `/dashboard`** — standalone page. Never embed it as a tab inside tool pages.
 11. **Settings is inside DashboardPage** (second tab). Don't create a separate `/settings` route.
-12. **Color theme kits** are applied via `data-accent` HTML attribute + CSS vars in `index.css`.
-13. **Password reset** returns `dev_code` in response when `EMAIL_MOCK_MODE=true` — shown in AuthModal amber box.
+12. **Color theme kits** use `applyAccentOverride(accent)` from `lib/theme.ts` — NOT just `data-accent`. This also injects a `<style>` tag overriding all hardcoded Tailwind teal classes with `!important`. Call it whenever accent changes (App init, Settings save).
+13. **Password reset** returns `dev_code` in response when `EMAIL_MOCK_MODE=true` — shown in AuthModal amber box. **Production:** Set `EMAIL_MOCK_MODE=false` and `RESEND_API_KEY` in Railway. Email service uses `httpx` async — no blocking.
 14. **2FA** uses real TOTP (pyotp). Secret stored in `users.two_fa_secret`. Verify with `valid_window=1`.
 15. **Delete** is always soft (`is_active=False`) — never hard DELETE.
 16. **QR auto-save** — When a logged-in user generates a QR in QRGeneratorPage, `createQR()` is called silently. If offline or unauthenticated, generation still works — no blocking.
