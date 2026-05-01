@@ -71,7 +71,7 @@ load_dotenv()
 BASE_URL = os.getenv("BASE_URL", "http://localhost:8000")
 ALLOWED_ORIGINS = os.getenv(
     "ALLOWED_ORIGINS",
-    "http://localhost:5173,http://localhost:5175,http://localhost:8080"
+    "http://localhost:5173,http://localhost:5175,http://localhost:8080,https://zapkit2.netlify.app,https://zapkit.netlify.app"
 ).split(",")
 
 app = FastAPI(title="TinyLink Pro API", version="1.0.0")

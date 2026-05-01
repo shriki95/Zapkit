@@ -117,7 +117,7 @@ export default function TinyLinkPage() {
           </nav>
 
           {/* Right actions */}
-          <div className="flex items-center gap-1 shrink-0">
+          <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
             {user ? (
               <>
                 <button

@@ -65,7 +65,7 @@ export default function ShortenForm({ onResult, onRefreshLinks, onLoadingChange 
         utm_content: utm.content || undefined,
         utm_term: utm.term || undefined,
       }
-      const res = await fetch(`${API}/shorten`, {
+      const res = await fetch(`${API}/api/shorten`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

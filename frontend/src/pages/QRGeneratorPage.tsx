@@ -258,8 +258,8 @@ export default function QRGeneratorPage() {
         </div>
 
         {/* Tab bar */}
-        <nav className="mx-auto max-w-6xl px-4" role="navigation">
-          <div className="flex gap-1" role="tablist">
+        <nav className="mx-auto max-w-6xl px-2 sm:px-4 overflow-x-auto" role="navigation">
+          <div className="flex gap-0.5 sm:gap-1 min-w-max sm:min-w-0" role="tablist">
             {visibleTabs.map(t => {
               const Icon = t.icon
               return (
@@ -268,7 +268,7 @@ export default function QRGeneratorPage() {
                   type="button"
                   onClick={() => handleTabClick(t.id)}
                   className={[
-                    'flex items-center gap-2 border-b-2 px-4 py-2.5 text-sm font-semibold transition-colors',
+                    'flex items-center gap-1.5 border-b-2 px-3 sm:px-4 py-2.5 text-xs sm:text-sm font-semibold transition-colors whitespace-nowrap',
                     appTab === t.id
                       ? 'border-[#00C4A7] text-[#00C4A7]'
                       : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200',
@@ -276,7 +276,7 @@ export default function QRGeneratorPage() {
                   role="tab"
                   aria-selected={appTab === t.id}
                 >
-                  <Icon className="h-4 w-4" aria-hidden="true" />
+                  <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true" />
                   {t.label}
                 </button>
               )

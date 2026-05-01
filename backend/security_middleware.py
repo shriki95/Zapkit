@@ -190,14 +190,16 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
                 # Allow localhost and configured origins
                 allowed_origins = os.getenv(
                     "ALLOWED_ORIGINS",
-                    "http://localhost:5173,http://localhost:5175,http://localhost:8080"
+                    "http://localhost:5173,http://localhost:5175,http://localhost:8080,https://zapkit2.netlify.app,https://zapkit.netlify.app"
                 ).split(",")
                 allowed_origins_stripped = [o.strip() for o in allowed_origins]
+                # Always allow netlify.app subdomains (production)
+                always_allowed = ["localhost", "127.0.0.1", "netlify.app", "railway.app"]
 
                 if origin:
                     if any(
                         allowed in origin
-                        for allowed in ["localhost", "127.0.0.1"] + allowed_origins_stripped
+                        for allowed in always_allowed + allowed_origins_stripped
                     ):
                         pass  # Allow
                     else:
@@ -208,7 +210,7 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
                 elif referer:
                     if any(
                         allowed in referer
-                        for allowed in ["localhost", "127.0.0.1"] + allowed_origins_stripped
+                        for allowed in always_allowed + allowed_origins_stripped
                     ):
                         pass  # Allow
                     else:
