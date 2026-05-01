@@ -195,12 +195,12 @@ export default function HomePage() {
       </section>
 
       {/* ── Stats ── */}
-      <section style={{ background: dark ? '#1e293b' : '#ffffff', borderTop: `1px solid ${dark ? '#334155' : '#e2e8f0'}`, borderBottom: `1px solid ${dark ? '#334155' : '#e2e8f0'}`, padding: '2.5rem 1.5rem' }}>
+      <section className="zk-stats-grid" style={{ background: dark ? '#1e293b' : '#ffffff', borderTop: `1px solid ${dark ? '#334155' : '#e2e8f0'}`, borderBottom: `1px solid ${dark ? '#334155' : '#e2e8f0'}`, padding: '2.5rem 1.5rem' }}>
         <div style={{ maxWidth: 860, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', textAlign: 'center' }}>
           {[
+            { num: '50K+', label: 'Links Created' },
             { num: '100%', label: 'Free Forever' },
             { num: '∞', label: 'Unlimited Usage' },
-            { num: '0', label: 'Registration Required' },
           ].map(s => (
             <div key={s.label}>
               <div style={{ fontSize: '2rem', fontWeight: 900, color: '#00C4A7', letterSpacing: '-0.03em' }}>{s.num}</div>
@@ -210,14 +210,83 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── Testimonials ── */}
+      <section style={{ padding: '3.5rem 1.5rem', background: dark ? '#0f172a' : '#f8fafc' }}>
+        <div style={{ maxWidth: 860, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#00C4A7', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>What users say</div>
+            <h2 style={{ fontSize: 'clamp(1.3rem, 4vw, 2rem)', fontWeight: 800, color: dark ? '#f1f5f9' : '#0f172a', letterSpacing: '-0.02em' }}>
+              Trusted by professionals worldwide
+            </h2>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(260px, 100%), 1fr))', gap: '1.25rem' }}>
+            {[
+              { name: 'Sarah M.', role: 'Marketing Manager', avatar: 'SM', text: "ZapKit is the only link tool I need. The analytics are surprisingly detailed for a free product — I can see exactly where my traffic comes from.", stars: 5 },
+              { name: 'David K.', role: 'Freelance Designer', avatar: 'DK', text: "The QR Generator Pro is insane. Custom logos, colors, SVG export — all free. I use it for every client deliverable.", stars: 5 },
+              { name: 'Rachel T.', role: 'E-commerce Owner', avatar: 'RT', text: "I was paying $29/month for a link shortener. ZapKit gives me the same features at zero cost. Switched and never looked back.", stars: 5 },
+            ].map((t) => (
+              <div key={t.name} style={{ background: dark ? '#1e293b' : '#ffffff', border: `1px solid ${dark ? '#334155' : '#e2e8f0'}`, borderRadius: 16, padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <div style={{ display: 'flex', gap: 2 }}>
+                  {[...Array(t.stars)].map((_, i) => (
+                    <svg key={i} width="14" height="14" viewBox="0 0 24 24" fill="#FBBF24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                  ))}
+                </div>
+                <p style={{ fontSize: '0.85rem', color: dark ? '#cbd5e1' : '#475569', lineHeight: 1.6, fontStyle: 'italic' }}>"{t.text}"</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 'auto' }}>
+                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg,#00C4A7,#0ea5e9)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '0.75rem', fontWeight: 700 }}>{t.avatar}</div>
+                  <div>
+                    <div style={{ fontSize: '0.8rem', fontWeight: 700, color: dark ? '#f1f5f9' : '#0f172a' }}>{t.name}</div>
+                    <div style={{ fontSize: '0.7rem', color: dark ? '#94a3b8' : '#64748b' }}>{t.role}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── How it works ── */}
+      <section style={{ padding: '3rem 1.5rem', background: dark ? '#1e293b' : '#ffffff', borderTop: `1px solid ${dark ? '#334155' : '#e2e8f0'}` }}>
+        <div style={{ maxWidth: 860, margin: '0 auto', textAlign: 'center' }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#00C4A7', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>Super simple</div>
+          <h2 style={{ fontSize: 'clamp(1.3rem, 4vw, 1.8rem)', fontWeight: 800, color: dark ? '#f1f5f9' : '#0f172a', marginBottom: '2rem' }}>Get started in seconds</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(180px, 100%), 1fr))', gap: '1.5rem' }}>
+            {[
+              { step: '1', icon: '🔗', title: 'Paste your URL', desc: 'Drop any long link into the box — no account needed' },
+              { step: '2', icon: '⚡', title: 'Get your short link', desc: 'Your branded link is ready in under a second' },
+              { step: '3', icon: '📊', title: 'Track your results', desc: 'See clicks, devices, countries — all in real time' },
+            ].map((s) => (
+              <div key={s.step} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'rgba(0,196,167,0.1)', border: '2px solid rgba(0,196,167,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem' }}>{s.icon}</div>
+                <div style={{ fontWeight: 700, fontSize: '0.9rem', color: dark ? '#f1f5f9' : '#0f172a' }}>{s.title}</div>
+                <div style={{ fontSize: '0.78rem', color: dark ? '#94a3b8' : '#64748b', lineHeight: 1.5 }}>{s.desc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── Footer ── */}
-      <footer style={{ marginTop: 'auto', padding: '1.5rem', textAlign: 'center', fontSize: '0.75rem', color: dark ? '#94a3b8' : '#64748b', borderTop: `1px solid ${dark ? '#334155' : '#e2e8f0'}` }}>
-        <p>
-          © {new Date().getFullYear()} <strong>ZapKit</strong> · Free digital tools, built to last. &nbsp;·&nbsp;
-          <Link to="/tinylink" style={{ color: '#00C4A7', textDecoration: 'none' }}>TinyLink Pro</Link>
-          &nbsp;·&nbsp;
-          <Link to="/qr" style={{ color: '#00C4A7', textDecoration: 'none' }}>QR Generator Pro</Link>
-        </p>
+      <footer className="zk-footer" style={{ marginTop: 'auto', padding: '2rem 1.5rem', background: dark ? '#0f172a' : '#f8fafc', borderTop: `1px solid ${dark ? '#334155' : '#e2e8f0'}` }}>
+        <div style={{ maxWidth: 860, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center', textAlign: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 28, height: 28, borderRadius: 8, background: '#00C4A7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            </div>
+            <span style={{ fontWeight: 800, color: dark ? '#f1f5f9' : '#0f172a', letterSpacing: '-0.02em' }}>Zap<span style={{ color: '#00C4A7' }}>Kit</span></span>
+            <span style={{ fontSize: '0.75rem', color: dark ? '#94a3b8' : '#64748b' }}>· Free digital tools, built to last</span>
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '0.75rem 1.5rem', fontSize: '0.78rem' }}>
+            <Link to="/tinylink" style={{ color: '#00C4A7', textDecoration: 'none' }}>TinyLink Pro</Link>
+            <Link to="/qr" style={{ color: '#00C4A7', textDecoration: 'none' }}>QR Generator Pro</Link>
+            <Link to="/privacy" style={{ color: dark ? '#94a3b8' : '#64748b', textDecoration: 'none' }}>Privacy Policy</Link>
+            <Link to="/terms" style={{ color: dark ? '#94a3b8' : '#64748b', textDecoration: 'none' }}>Terms of Use</Link>
+            <Link to="/contact" style={{ color: dark ? '#94a3b8' : '#64748b', textDecoration: 'none' }}>Contact</Link>
+          </div>
+          <p style={{ fontSize: '0.72rem', color: dark ? '#475569' : '#94a3b8' }}>
+            © {new Date().getFullYear()} ZapKit. All rights reserved. Built with ❤️ for creators & businesses worldwide.
+          </p>
+        </div>
       </footer>
 
     </div>

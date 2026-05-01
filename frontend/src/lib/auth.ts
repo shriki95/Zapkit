@@ -229,12 +229,21 @@ export async function getQRStats(qrCode: string): Promise<QRStats> {
   return res.json()
 }
 
-export async function requestPasswordReset(email: string): Promise<{ message: string }> {
+export async function requestPasswordReset(email: string): Promise<{ message: string; dev_code?: string }> {
   const res = await apiFetch('/api/auth/password-reset/request', {
     method: 'POST',
     body: JSON.stringify({ email }),
   })
   if (!res.ok) throw new Error(await parseApiError(res, 'Failed to request password reset'))
+  return res.json()
+}
+
+export async function changePassword(currentPassword: string, newPassword: string): Promise<{ message: string }> {
+  const res = await apiFetch('/api/auth/change-password', {
+    method: 'POST',
+    body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+  })
+  if (!res.ok) throw new Error(await parseApiError(res, 'Failed to change password'))
   return res.json()
 }
 

@@ -163,6 +163,7 @@ class PasswordResetResponse(BaseModel):
     message: str
     qr_code_data: str | None = None  # Base64 QR code image
     expires_in_minutes: int
+    dev_code: str | None = None  # Only populated in mock/dev mode — shown in UI
 
 
 class UserResponse(BaseModel):

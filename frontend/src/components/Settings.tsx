@@ -1,11 +1,11 @@
 import { useState } from 'react'
-import { User, Shield, Bell, Palette, Trash2, CheckCircle, AlertCircle, Copy, Check } from 'lucide-react'
-import { enable2FA, verify2FA, getUser, type User as UserType } from '../lib/auth'
+import { User, Shield, Bell, Palette, Trash2, CheckCircle, AlertCircle, Copy, Check, Lock, Eye, EyeOff } from 'lucide-react'
+import { enable2FA, verify2FA, getUser, changePassword, type User as UserType } from '../lib/auth'
 
 export default function Settings() {
   const [user, setUser] = useState<UserType | null>(getUser())
   const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'preferences'>('profile')
-  
+
   // 2FA state
   const [show2FASetup, setShow2FASetup] = useState(false)
   const [qrCode, setQrCode] = useState<string | null>(null)
@@ -15,6 +15,16 @@ export default function Settings() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [secretCopied, setSecretCopied] = useState(false)
+
+  // Change password state
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [showCurrentPw, setShowCurrentPw] = useState(false)
+  const [showNewPw, setShowNewPw] = useState(false)
+  const [pwLoading, setPwLoading] = useState(false)
+  const [pwError, setPwError] = useState('')
+  const [pwSuccess, setPwSuccess] = useState('')
 
   // Profile state
   const [displayName, setDisplayName] = useState(user?.name || '')
@@ -324,42 +334,101 @@ export default function Settings() {
 
           {/* Change Password */}
           <div className="card p-6">
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Change Password</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                  Current Password
-                </label>
-                <input
-                  type="password"
-                  className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#00C4A7]"
-                  placeholder="••••••••"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                  New Password
-                </label>
-                <input
-                  type="password"
-                  className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#00C4A7]"
-                  placeholder="••••••••"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                  Confirm New Password
-                </label>
-                <input
-                  type="password"
-                  className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#00C4A7]"
-                  placeholder="••••••••"
-                />
-              </div>
-              <button className="px-4 py-2 rounded-lg bg-[#00C4A7] text-white font-semibold hover:bg-[#00B096] transition-colors">
-                Update Password
-              </button>
+            <div className="flex items-center gap-2 mb-4">
+              <Lock size={18} className="text-[#00C4A7]" />
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Change Password</h3>
             </div>
+
+            {pwSuccess && (
+              <div className="mb-4 flex items-center gap-2 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 p-3 text-sm text-green-700 dark:text-green-400">
+                <CheckCircle size={16} /> {pwSuccess}
+              </div>
+            )}
+            {pwError && (
+              <div className="mb-4 flex items-center gap-2 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-3 text-sm text-red-700 dark:text-red-400">
+                <AlertCircle size={16} /> {pwError}
+              </div>
+            )}
+
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault()
+                setPwError('')
+                setPwSuccess('')
+                if (newPassword !== confirmPassword) { setPwError('New passwords do not match'); return }
+                if (newPassword.length < 8) { setPwError('Password must be at least 8 characters'); return }
+                setPwLoading(true)
+                try {
+                  const res = await changePassword(currentPassword, newPassword)
+                  setPwSuccess(res.message)
+                  setCurrentPassword(''); setNewPassword(''); setConfirmPassword('')
+                } catch (err: any) {
+                  setPwError(err.message || 'Failed to change password')
+                } finally {
+                  setPwLoading(false)
+                }
+              }}
+              className="space-y-4"
+            >
+              {/* Current Password */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Current Password</label>
+                <div className="relative">
+                  <input
+                    type={showCurrentPw ? 'text' : 'password'}
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    required
+                    className="w-full pl-4 pr-10 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#00C4A7]"
+                    placeholder="••••••••"
+                  />
+                  <button type="button" onClick={() => setShowCurrentPw(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                    {showCurrentPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+              </div>
+
+              {/* New Password */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">New Password</label>
+                <div className="relative">
+                  <input
+                    type={showNewPw ? 'text' : 'password'}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                    minLength={8}
+                    className="w-full pl-4 pr-10 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#00C4A7]"
+                    placeholder="••••••••"
+                  />
+                  <button type="button" onClick={() => setShowNewPw(v => !v)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                    {showNewPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Min 8 characters</p>
+              </div>
+
+              {/* Confirm Password */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">Confirm New Password</label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#00C4A7]"
+                  placeholder="••••••••"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={pwLoading}
+                className="px-6 py-2.5 rounded-lg bg-[#00C4A7] text-white font-semibold hover:bg-[#00B096] transition-colors disabled:opacity-50"
+              >
+                {pwLoading ? 'Updating...' : 'Update Password'}
+              </button>
+            </form>
           </div>
 
           {/* Danger Zone */}

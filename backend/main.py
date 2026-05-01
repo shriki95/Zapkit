@@ -558,6 +558,30 @@ async def get_me(current_user: User = Depends(get_current_user)):
     return UserResponse.model_validate(current_user)
 
 
+@app.post("/api/auth/change-password")
+async def change_password(
+    body: dict,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Change password for an authenticated user."""
+    current_password = body.get("current_password", "")
+    new_password = body.get("new_password", "")
+
+    if not current_password or not new_password:
+        raise HTTPException(status_code=400, detail="Both current_password and new_password are required")
+
+    if not verify_password(current_password, current_user.hashed_password):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+
+    if len(new_password) < 8:
+        raise HTTPException(status_code=400, detail="New password must be at least 8 characters")
+
+    current_user.hashed_password = hash_password(new_password)
+    await db.commit()
+    return {"message": "Password changed successfully"}
+
+
 # ── Password Reset ────────────────────────────────────────────────────────────
 
 @app.post("/api/auth/password-reset/request", response_model=PasswordResetResponse)
@@ -636,10 +660,20 @@ async def request_password_reset(
     db.add(password_reset)
     await db.commit()
     
+    # In mock/dev mode, expose the code directly in the response so it can be shown in the UI
+    mock_mode = os.getenv("EMAIL_MOCK_MODE", "true").lower() == "true"
+    dev_code = verification_code if mock_mode else None
+    msg = (
+        f"[DEV MODE] No email sent — your verification code is: {verification_code}"
+        if mock_mode
+        else "Verification code sent to your email. Check your inbox or scan the QR code below."
+    )
+
     return PasswordResetResponse(
-        message="Verification code sent to your email. Check your inbox or scan the QR code below.",
+        message=msg,
         qr_code_data=qr_code_data,
-        expires_in_minutes=15
+        expires_in_minutes=15,
+        dev_code=dev_code,
     )
 
 

@@ -1,9 +1,12 @@
 import { createContext, useContext, useEffect, useState } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { getUser, initAutoLogout, type User } from './lib/auth'
 import HomePage from './pages/HomePage'
 import TinyLinkPage from './pages/TinyLinkPage'
 import QRGeneratorPage from './pages/QRGeneratorPage'
+import PrivacyPage from './pages/PrivacyPage'
+import TermsPage from './pages/TermsPage'
+import ContactPage from './pages/ContactPage'
 import AuthModal from './components/AuthModal'
 import GDPRBanner from './components/GDPRBanner'
 
@@ -43,6 +46,13 @@ const AuthContext = createContext<AuthContextValue>({
 
 export function useAuth() {
   return useContext(AuthContext)
+}
+
+// ── Scroll to top on every route change ──────────────────────────────────────
+function ScrollToTop() {
+  const { pathname } = useLocation()
+  useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }) }, [pathname])
+  return null
 }
 
 // ── App ───────────────────────────────────────────────────────────────────────
@@ -128,10 +138,14 @@ export default function App() {
   return (
     <AuthContext.Provider value={{ user, setUser, showAuthModal, setShowAuthModal, authMode, setAuthMode, dark, setDark }}>
       <BrowserRouter>
+        <ScrollToTop />
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/tinylink" element={<TinyLinkPage />} />
           <Route path="/qr" element={<QRGeneratorPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/contact" element={<ContactPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
 

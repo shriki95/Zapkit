@@ -314,9 +314,9 @@ export default function TinyLinkPage() {
                 </div>
               </div>
               <div className="flex items-center gap-4 text-xs text-slate-400 dark:text-slate-500">
-                <a href="#" className="hover:text-[#00C4A7] transition-colors">Privacy Policy</a>
-                <a href="#" className="hover:text-[#00C4A7] transition-colors">Terms of Use</a>
-                <a href="#" className="hover:text-[#00C4A7] transition-colors">Contact</a>
+                <Link to="/privacy" className="hover:text-[#00C4A7] transition-colors">Privacy Policy</Link>
+                <Link to="/terms" className="hover:text-[#00C4A7] transition-colors">Terms of Use</Link>
+                <Link to="/contact" className="hover:text-[#00C4A7] transition-colors">Contact</Link>
               </div>
             </div>
             <div className="border-t border-slate-100 dark:border-slate-800 pt-4 flex flex-col sm:flex-row items-center justify-between gap-3">

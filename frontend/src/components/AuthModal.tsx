@@ -22,6 +22,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, mode: initialMod
   const [acceptTerms, setAcceptTerms] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
+  const [devCode, setDevCode] = useState<string | null>(null)
 
   if (!isOpen) return null
 
@@ -46,6 +47,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, mode: initialMod
       } else if (mode === 'forgot') {
         const result = await requestPasswordReset(email)
         setSuccess(result.message)
+        if (result.dev_code) setDevCode(result.dev_code)
         setMode('reset')
       } else if (mode === 'reset') {
         const result = await verifyPasswordReset(email, resetCode, newPassword)
@@ -102,7 +104,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess, mode: initialMod
         {/* Header */}
         <div className="mb-6">
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
-            {mode === 'login' && 'Welcome Back'}
+            {mode === 'login' && 'Sign In'}
             {mode === 'register' && 'Create Account'}
             {mode === 'forgot' && 'Reset Password'}
             {mode === 'reset' && 'Enter Verification Code'}
@@ -117,9 +119,14 @@ export default function AuthModal({ isOpen, onClose, onSuccess, mode: initialMod
 
         {/* Success message */}
         {success && (
-          <div className="mb-4 flex items-center gap-2 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 p-3 text-sm text-green-700 dark:text-green-400">
-            <CheckCircle size={16} />
-            {success}
+          <div className="mb-4 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 p-3 text-sm text-green-700 dark:text-green-400">
+            <div className="flex items-center gap-2"><CheckCircle size={16} />{success}</div>
+            {devCode && (
+              <div className="mt-2 rounded-md bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 p-2 text-center">
+                <div className="text-xs text-amber-700 dark:text-amber-400 font-medium mb-1">⚠️ Dev Mode — your code:</div>
+                <div className="text-2xl font-mono font-bold tracking-[0.3em] text-amber-800 dark:text-amber-300">{devCode}</div>
+              </div>
+            )}
           </div>
         )}
 

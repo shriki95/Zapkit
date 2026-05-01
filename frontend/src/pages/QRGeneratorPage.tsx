@@ -388,11 +388,11 @@ export default function QRGeneratorPage() {
                         ))}
                       </div>
                       <div className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-1">
-                        {loadingProgress < 20 && 'Analyzing input data...'}
-                        {loadingProgress >= 20 && loadingProgress < 45 && 'Encoding to QR matrix...'}
-                        {loadingProgress >= 45 && loadingProgress < 68 && 'Applying error correction...'}
-                        {loadingProgress >= 68 && loadingProgress < 88 && 'Optimizing dot pattern...'}
-                        {loadingProgress >= 88 && 'Rendering final design...'}
+                        {loadingProgress < 20 && 'Validating your data…'}
+                        {loadingProgress >= 20 && loadingProgress < 45 && 'Building QR matrix…'}
+                        {loadingProgress >= 45 && loadingProgress < 68 && 'Adding error correction…'}
+                        {loadingProgress >= 68 && loadingProgress < 88 && 'Applying design…'}
+                        {loadingProgress >= 88 && 'Almost ready!'}
                       </div>
                       <div className="text-xs text-slate-500 dark:text-slate-400 mb-3">{loadingProgress}% Complete</div>
                       <div className="w-full bg-slate-200 rounded-full h-1.5 mb-4 dark:bg-slate-700 overflow-hidden">
@@ -418,7 +418,8 @@ export default function QRGeneratorPage() {
                   </div>
                 ) : generatedPayload ? (
                   <div className="mx-auto max-w-[380px]">
-                    <div className="mx-auto w-fit">
+                    {/* Always render QR on white background — ensures scannability in dark mode */}
+                    <div className="mx-auto w-fit rounded-xl bg-white p-3 shadow-sm">
                       <QrPreview key={design.margin} data={generatedPayload} design={design} onReady={setQrInstance} />
                     </div>
                   </div>
@@ -428,8 +429,10 @@ export default function QRGeneratorPage() {
                       <div className="mx-auto mb-2 grid h-12 w-12 place-items-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
                         <QrCode className="h-6 w-6" />
                       </div>
-                      <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">QR not generated yet</div>
-                      <div className="mt-1 text-xs text-slate-600 dark:text-slate-400">Fill in the fields and the QR will appear here automatically.</div>
+                      <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">Your QR code will appear here</div>
+                      <div className="mt-1 text-xs text-slate-600 dark:text-slate-400">
+                        👆 Choose a QR type on the left, fill in the details, then click <strong>Generate</strong>.
+                      </div>
                       <div className="mt-6 rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-600 dark:bg-slate-800">
                         <div className="text-xs text-slate-500 dark:text-slate-400 mb-2">Advertisement</div>
                         <div className="bg-white dark:bg-slate-900 rounded border min-h-[250px] flex items-center justify-center">
@@ -558,9 +561,9 @@ export default function QRGeneratorPage() {
                 </div>
               </div>
               <div className="flex items-center gap-4 text-xs text-slate-400 dark:text-slate-500">
-                <a href="#" className="hover:text-[#00C4A7] transition-colors">Privacy Policy</a>
-                <a href="#" className="hover:text-[#00C4A7] transition-colors">Terms of Use</a>
-                <a href="#" className="hover:text-[#00C4A7] transition-colors">Contact</a>
+                <Link to="/privacy" className="hover:text-[#00C4A7] transition-colors">Privacy Policy</Link>
+                <Link to="/terms" className="hover:text-[#00C4A7] transition-colors">Terms of Use</Link>
+                <Link to="/contact" className="hover:text-[#00C4A7] transition-colors">Contact</Link>
               </div>
             </div>
             <div className="border-t border-slate-100 dark:border-slate-800 pt-4 flex flex-col sm:flex-row items-center justify-between gap-3">
