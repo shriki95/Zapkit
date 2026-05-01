@@ -30,20 +30,25 @@ export default function HomePage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: "system-ui, 'Segoe UI', Roboto, sans-serif", background: dark ? '#0f172a' : '#f8fafc', color: dark ? '#f1f5f9' : '#0f172a' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: "system-ui, 'Segoe UI', Roboto, sans-serif", background: dark ? '#0f172a' : '#f8fafc', color: dark ? '#f1f5f9' : '#0f172a', overflowX: 'hidden' }}>
       <style>{`
+        * { box-sizing: border-box; }
         @media (max-width: 600px) {
           .zk-header-btns { gap: 4px !important; }
           .zk-header-btns a, .zk-header-btns button { padding: 5px 8px !important; font-size: 0.78rem !important; }
           .zk-stats-grid { grid-template-columns: repeat(3,1fr) !important; gap: 0.5rem !important; }
           .zk-stats-grid > div > div:first-child { font-size: 1.4rem !important; }
-          .zk-cards-grid { padding: 0 1rem 2.5rem !important; margin-top: -1.5rem !important; }
+          .zk-cards-grid { grid-template-columns: 1fr !important; padding: 0 1rem 2.5rem !important; margin-top: -1.5rem !important; }
           .zk-hero { padding: 3rem 1rem 2.5rem !important; }
+          .zk-hero h1 { font-size: 1.8rem !important; }
+          .zk-hero p { font-size: 0.9rem !important; }
+          .zk-badge { font-size: 0.65rem !important; padding: 3px 8px !important; }
           .zk-footer { padding: 1rem !important; font-size: 0.7rem !important; }
         }
         @media (max-width: 400px) {
           .zk-stats-grid { grid-template-columns: 1fr !important; }
           .zk-header-logo span { font-size: 0.95rem !important; }
+          .zk-hero h1 { font-size: 1.5rem !important; }
         }
       `}</style>
 
@@ -116,21 +121,21 @@ export default function HomePage() {
       </header>
 
       {/* ── Hero ── */}
-      <section style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)', padding: '5rem 1.5rem 4rem', textAlign: 'center' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(0,196,167,0.15)', border: '1px solid rgba(0,196,167,0.3)', color: '#00C4A7', fontSize: '0.75rem', fontWeight: 600, padding: '4px 12px', borderRadius: 999, marginBottom: '1.5rem', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-          <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      <section className="zk-hero" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)', padding: '5rem 1.5rem 4rem', textAlign: 'center', width: '100%' }}>
+        <div className="zk-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(0,196,167,0.15)', border: '1px solid rgba(0,196,167,0.3)', color: '#00C4A7', fontSize: '0.75rem', fontWeight: 600, padding: '4px 12px', borderRadius: 999, marginBottom: '1.5rem', letterSpacing: '0.05em', textTransform: 'uppercase', maxWidth: '100%', flexWrap: 'wrap', justifyContent: 'center' }}>
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" style={{ flexShrink: 0 }}><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
           Trusted by professionals worldwide
         </div>
-        <h1 style={{ fontSize: 'clamp(2rem, 5vw, 3.25rem)', fontWeight: 900, color: '#fff', lineHeight: 1.15, marginBottom: '1rem', letterSpacing: '-0.03em' }}>
+        <h1 style={{ fontSize: 'clamp(1.75rem, 6vw, 3.25rem)', fontWeight: 900, color: '#fff', lineHeight: 1.15, marginBottom: '1rem', letterSpacing: '-0.03em', wordBreak: 'break-word' }}>
           Enterprise-Grade Tools.<br/><span style={{ color: '#00C4A7' }}>Zero Cost.</span>
         </h1>
-        <p style={{ fontSize: '1.05rem', color: '#94a3b8', maxWidth: 520, margin: '0 auto 2rem', lineHeight: 1.6 }}>
+        <p className="zk-hero p" style={{ fontSize: '1.05rem', color: '#94a3b8', maxWidth: 520, margin: '0 auto 2rem', lineHeight: 1.6 }}>
           Professional link management and QR code generation. Built for businesses, free for everyone. No registration required.
         </p>
       </section>
 
       {/* ── Tool Cards ── */}
-      <section style={{ maxWidth: 860, margin: '-2.5rem auto 0', padding: '0 1.5rem 4rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.25rem' }}>
+      <section className="zk-cards-grid" style={{ maxWidth: 860, width: '100%', margin: '-2.5rem auto 0', padding: '0 1.5rem 4rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(300px, 100%), 1fr))', gap: '1.25rem' }}>
 
         {/* TinyLink Pro */}
         <Link to="/tinylink" style={{ background: dark ? '#1e293b' : '#ffffff', border: `1px solid ${dark ? '#334155' : '#e2e8f0'}`, borderRadius: 20, padding: '2rem 1.75rem', textDecoration: 'none', color: dark ? '#f1f5f9' : '#0f172a', display: 'flex', flexDirection: 'column', gap: '1rem', boxShadow: '0 4px 24px rgba(0,0,0,0.06)', transition: 'transform 0.2s, box-shadow 0.2s' }}
