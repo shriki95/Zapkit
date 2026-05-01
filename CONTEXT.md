@@ -302,7 +302,7 @@ Loaded on app init in `App.tsx useEffect`.
 
 ### Icons
 - **Library:** Lucide React exclusively — NO emojis, NO generic icon fonts
-- Common: `Link2`, `QrCode`, `LayoutDashboard`, `Settings`, `Zap`, `TrendingUp`, `Eye`, `Trash2`, `RefreshCw`, `LogIn`, `LogOut`, `Moon`, `Sun`, `CheckSquare`, `Square`
+- Common: `Link2`, `QrCode`, `LayoutDashboard`, `Settings`, `Zap`, `TrendingUp`, `Eye`, `Trash2`, `RefreshCw`, `LogIn`, `LogOut`, `Moon`, `Sun`, `CheckSquare`, `Square`, `Copy`, `Check`, `Download`, `ExternalLink`, `Calendar`
 
 ---
 
@@ -418,6 +418,15 @@ This section is designed to help build other apps at the same quality level, fas
 
 ## 11. Recent Changes Log
 
+### 2026-05-01 (v2) — Dashboard Copy/Download + QR Auto-Save
+- **Frontend:** DashboardPage — copy short link to clipboard with "Copied!" visual feedback (2 s reset)
+- **Frontend:** DashboardPage — copy QR content to clipboard with same feedback
+- **Frontend:** DashboardPage — re-download any QR code as 512×512 PNG (lazy-imports `qrcode` lib; no stored images needed)
+- **Frontend:** DashboardPage — QR cards now show `content` text (human-readable) instead of raw UUID code
+- **Frontend:** QRGeneratorPage — auto-save generated QR to user's account via `/api/qr/create` when logged in (fire-and-forget, never blocks generation)
+- **Frontend:** auth.ts — added `createQR()`, confirmed `deleteLink()` and `deleteQR()` in place
+- **Icons added:** `Copy`, `Check`, `Download` in DashboardPage import
+
 ### 2026-05-01 — Major Feature Batch
 - **Backend:** Added `DELETE /api/dashboard/links/{code}` and `DELETE /api/dashboard/qr/{code}` (auth-required soft delete)
 - **Backend:** Added real TOTP 2FA with pyotp (secret saved to DB, `verify()` with valid_window=1)
@@ -462,3 +471,7 @@ This section is designed to help build other apps at the same quality level, fas
 13. **Password reset** returns `dev_code` in response when `EMAIL_MOCK_MODE=true` — shown in AuthModal amber box.
 14. **2FA** uses real TOTP (pyotp). Secret stored in `users.two_fa_secret`. Verify with `valid_window=1`.
 15. **Delete** is always soft (`is_active=False`) — never hard DELETE.
+16. **QR auto-save** — When a logged-in user generates a QR in QRGeneratorPage, `createQR()` is called silently. If offline or unauthenticated, generation still works — no blocking.
+17. **Re-download QR from dashboard** — Uses `import('qrcode').toDataURL()` (lazy import). No stored image in DB; always regenerated from `content` field.
+18. **Copy pattern** — `copiedCode` state stores which item was last copied; reset after 2 s. Same pattern for any clipboard action.
+19. **`auth.ts` API helpers:** `createQR`, `deleteLink`, `deleteQR`, `getLinkStats`, `getQRStats`, `getDashboard`, `changePassword`, `requestPasswordReset`, `verifyPasswordReset`, `enable2FA`, `verify2FA`, `disable2FA`.
