@@ -425,7 +425,7 @@ export default function DashboardPage() {
                                   {/* Delete button */}
                                   <button
                                     onClick={() => setDeleteConfirm({ type: 'link', code: link.short_code })}
-                                    className="absolute top-3 right-3 p-1.5 rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 opacity-0 group-hover:opacity-100 transition-all"
+                                    className="absolute top-3 right-3 p-1.5 rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
                                     title="Delete link"
                                   >
                                     <Trash2 size={13} />
@@ -492,7 +492,7 @@ export default function DashboardPage() {
                                   {/* Delete button */}
                                   <button
                                     onClick={() => setDeleteConfirm({ type: 'qr', code: qr.qr_code })}
-                                    className="absolute top-3 right-3 p-1.5 rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 opacity-0 group-hover:opacity-100 transition-all"
+                                    className="absolute top-3 right-3 p-1.5 rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
                                     title="Delete QR code"
                                   >
                                     <Trash2 size={13} />
@@ -552,7 +552,7 @@ export default function DashboardPage() {
                                 <div className="flex items-center gap-2 mb-4">
                                   <BarChart3 size={16} className="text-[#00C4A7]" />
                                   <span className="text-sm font-bold text-slate-900 dark:text-white">Activity over time</span>
-                                  <span className="text-xs text-slate-400 ml-1">— last 30 days</span>
+                                  <span className="text-xs text-slate-400 ml-1">· last 30 days</span>
                                 </div>
                                 {mergedChartData.length > 0 ? (
                                   <ResponsiveContainer width="100%" height={220}>
@@ -577,7 +577,7 @@ export default function DashboardPage() {
                                     </AreaChart>
                                   </ResponsiveContainer>
                                 ) : (
-                                  <div className="h-[220px] flex items-center justify-center text-slate-400 text-sm">No activity yet — share your link or QR code to start tracking.</div>
+                                  <div className="h-[220px] flex items-center justify-center text-slate-400 text-sm">No activity yet. Share your link or QR code to start tracking.</div>
                                 )}
                               </div>
 

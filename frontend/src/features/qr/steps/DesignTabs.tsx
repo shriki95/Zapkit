@@ -307,7 +307,7 @@ export function DesignTabs({
           {/* Margin */}
           <div>
             <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-              Margin — {value.margin}px
+              Margin: {value.margin}px
             </label>
             <input type="range" min={0} max={32} value={value.margin}
               onChange={e => patch({ margin: Number(e.target.value) })}
@@ -327,7 +327,7 @@ export function DesignTabs({
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5-5 5 5M12 5v11" />
               </svg>
               <span className="text-sm text-slate-600 dark:text-slate-400">
-                {isCustomLogo ? 'Custom logo active — click to change' : 'Choose file (PNG, SVG, JPG)'}
+                {isCustomLogo ? 'Custom logo active - click to change' : 'Choose file (PNG, SVG, JPG)'}
               </span>
               <input
                 type="file"
@@ -378,7 +378,7 @@ export function DesignTabs({
           {value.logoDataUrl && (
             <div>
               <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                Logo size — {Math.round(value.logoScale * 100)}%
+                Logo size: {Math.round(value.logoScale * 100)}%
               </label>
               <input type="range" min={0.08} max={0.35} step={0.01} value={value.logoScale}
                 onChange={e => patch({ logoScale: Number(e.target.value) })}

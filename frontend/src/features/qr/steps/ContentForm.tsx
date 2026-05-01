@@ -116,7 +116,7 @@ function PhoneInput({ value, onChange, placeholder = 'Phone number' }: { value: 
             <option value="">🌍 Country</option>
             {unique.map(c => (
               <option key={`${c.code}-${c.name}`} value={c.code}>
-                {c.flag} {c.code} — {c.name}
+                {c.flag} {c.code} - {c.name}
               </option>
             ))}
           </select>
@@ -379,7 +379,7 @@ export function ContentForm({ qrType, value, onChange }: Props) {
           />
         </Field>
         <p className="text-xs text-slate-500 dark:text-slate-400">
-          Tip: provide both links for the best experience. The QR will use the iOS link — Android users can still access it.
+          Tip: provide both links for the best experience. The QR will use the iOS link, and Android users can still access it.
         </p>
       </div>
     )

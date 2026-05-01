@@ -54,7 +54,7 @@ export default function Settings() {
   const [themeSaved, setThemeSaved] = useState(false)
 
   const ACCENT_KITS = [
-    { id: 'teal',   name: 'ZapKit Teal',   color: '#00C4A7', desc: 'Original brand — always fresh' },
+    { id: 'teal',   name: 'ZapKit Teal',   color: '#00C4A7', desc: 'Original brand - always fresh' },
     { id: 'indigo', name: 'Midnight Indigo', color: '#6366f1', desc: 'Deep focus, professional tone' },
     { id: 'rose',   name: 'Rose Quartz',   color: '#f43f5e', desc: 'Bold and expressive' },
     { id: 'amber',  name: 'Amber Gold',    color: '#f59e0b', desc: 'Warm and premium' },
@@ -282,7 +282,7 @@ export default function Settings() {
                   <Shield size={24} className="text-[#00C4A7] flex-shrink-0" />
                   <div className="flex-1">
                     <div className="font-semibold text-slate-900 dark:text-white">
-                      Two-Factor Authentication — <span className="text-slate-500 dark:text-slate-400">Not active</span>
+                      Two-Factor Authentication: <span className="text-slate-500 dark:text-slate-400">Not active</span>
                     </div>
                     <div className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
                       Protect your account with a one-time code from your phone.

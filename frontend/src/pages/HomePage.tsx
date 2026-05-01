@@ -1,10 +1,23 @@
-import { useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { logout } from '../lib/auth'
 import { useAuth } from '../App'
 
 export default function HomePage() {
   const { user, setUser, dark, setDark, setShowAuthModal, setAuthMode } = useAuth()
+  const navigate = useNavigate()
+  const [showUserMenu, setShowUserMenu] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    if (!showUserMenu) return
+    const handler = (e: MouseEvent) => {
+      if (!menuRef.current?.contains(e.target as Node)) setShowUserMenu(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [showUserMenu])
 
   // Update activity timestamp
   useEffect(() => {
@@ -27,10 +40,11 @@ export default function HomePage() {
   const handleLogout = () => {
     logout()
     setUser(null)
+    setShowUserMenu(false)
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: "system-ui, 'Segoe UI', Roboto, sans-serif", background: dark ? '#0f172a' : '#f8fafc', color: dark ? '#f1f5f9' : '#0f172a', overflowX: 'hidden' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: "'Plus Jakarta Sans', system-ui, -apple-system, sans-serif", background: dark ? '#0f172a' : '#f8fafc', color: dark ? '#f1f5f9' : '#0f172a', overflowX: 'hidden' }}>
       <style>{`
         * { box-sizing: border-box; }
         @media (max-width: 600px) {
@@ -74,20 +88,54 @@ export default function HomePage() {
 
         <div className="zk-header-btns" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {user ? (
-            <>
-              <Link
-                to="/dashboard"
-                style={{ padding: '6px 14px', background: '#00C4A7', color: 'white', textDecoration: 'none', borderRadius: 8, fontSize: '0.875rem', fontWeight: 600 }}
-              >
-                My Dashboard
-              </Link>
+            <div style={{ position: 'relative' }} ref={menuRef}>
               <button
-                onClick={handleLogout}
-                style={{ padding: '6px 14px', background: 'transparent', border: `1px solid ${dark ? '#334155' : '#e2e8f0'}`, color: dark ? '#94a3b8' : '#64748b', borderRadius: 8, fontSize: '0.875rem', cursor: 'pointer' }}
+                onClick={() => setShowUserMenu(m => !m)}
+                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 12px', background: 'rgba(0,196,167,0.1)', border: '1px solid rgba(0,196,167,0.2)', borderRadius: 10, cursor: 'pointer', fontSize: '0.875rem', fontWeight: 600, color: dark ? '#fff' : '#0f172a' }}
               >
-                Logout
+                <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#00C4A7', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '0.7rem', fontWeight: 700, flexShrink: 0 }}>
+                  {(user.name ?? user.email)[0].toUpperCase()}
+                </div>
+                <span style={{ maxWidth: 100, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {user.name ?? user.email.split('@')[0]}
+                </span>
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'transform 0.2s', transform: showUserMenu ? 'rotate(180deg)' : 'none', flexShrink: 0 }}>
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
               </button>
-            </>
+              {showUserMenu && (
+                <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 8px)', width: 210, background: dark ? '#0f172a' : '#fff', border: `1px solid ${dark ? '#334155' : '#e2e8f0'}`, borderRadius: 16, boxShadow: '0 10px 40px rgba(0,0,0,0.15)', overflow: 'hidden', zIndex: 50 }}>
+                  <div style={{ padding: '12px 16px', borderBottom: `1px solid ${dark ? '#1e293b' : '#f1f5f9'}` }}>
+                    <div style={{ fontSize: '0.7rem', color: dark ? '#64748b' : '#94a3b8' }}>Signed in as</div>
+                    <div style={{ fontSize: '0.875rem', fontWeight: 700, color: dark ? '#fff' : '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {user.name ?? user.email.split('@')[0]}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => { navigate('/dashboard'); setShowUserMenu(false) }}
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '11px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: dark ? '#cbd5e1' : '#374151', textAlign: 'left' }}
+                  >
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#00C4A7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                    My Dashboard
+                  </button>
+                  <button
+                    onClick={() => { navigate('/dashboard?tab=settings'); setShowUserMenu(false) }}
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '11px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: dark ? '#cbd5e1' : '#374151', textAlign: 'left' }}
+                  >
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+                    Settings
+                  </button>
+                  <div style={{ borderTop: `1px solid ${dark ? '#1e293b' : '#f1f5f9'}` }} />
+                  <button
+                    onClick={handleLogout}
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '11px 16px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem', color: '#ef4444', textAlign: 'left' }}
+                  >
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    Log out
+                  </button>
+                </div>
+              )}
+            </div>
           ) : (
             <button
               onClick={handleLoginClick}
@@ -124,13 +172,13 @@ export default function HomePage() {
       <section className="zk-hero" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)', padding: '5rem 1.5rem 4rem', textAlign: 'center', width: '100%' }}>
         <div className="zk-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(0,196,167,0.15)', border: '1px solid rgba(0,196,167,0.3)', color: '#00C4A7', fontSize: '0.75rem', fontWeight: 600, padding: '4px 12px', borderRadius: 999, marginBottom: '1.5rem', letterSpacing: '0.05em', textTransform: 'uppercase', maxWidth: '100%', flexWrap: 'wrap', justifyContent: 'center' }}>
           <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" style={{ flexShrink: 0 }}><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-          Trusted by professionals worldwide
+          50,000+ links created and counting
         </div>
         <h1 style={{ fontSize: 'clamp(1.75rem, 6vw, 3.25rem)', fontWeight: 900, color: '#fff', lineHeight: 1.15, marginBottom: '1rem', letterSpacing: '-0.03em', wordBreak: 'break-word' }}>
-          Enterprise-Grade Tools.<br/><span style={{ color: '#00C4A7' }}>Zero Cost.</span>
+          Shorten links. Create QR codes.<br/><span style={{ color: '#00C4A7' }}>Track everything.</span>
         </h1>
         <p className="zk-hero p" style={{ fontSize: '1.05rem', color: '#94a3b8', maxWidth: 520, margin: '0 auto 2rem', lineHeight: 1.6 }}>
-          Professional link management and QR code generation. Built for businesses, free for everyone. No registration required.
+          Free tools for URL shortening and QR code generation, with real-time analytics. No subscription, no limits.
         </p>
       </section>
 
@@ -214,16 +262,16 @@ export default function HomePage() {
       <section style={{ padding: '3.5rem 1.5rem', background: dark ? '#0f172a' : '#f8fafc' }}>
         <div style={{ maxWidth: 860, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#00C4A7', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>What users say</div>
+            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#00C4A7', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif" }}>What users say</div>
             <h2 style={{ fontSize: 'clamp(1.3rem, 4vw, 2rem)', fontWeight: 800, color: dark ? '#f1f5f9' : '#0f172a', letterSpacing: '-0.02em' }}>
-              Trusted by professionals worldwide
+              See what people are saying
             </h2>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(260px, 100%), 1fr))', gap: '1.25rem' }}>
             {[
-              { name: 'Sarah M.', role: 'Marketing Manager', avatar: 'SM', text: "ZapKit is the only link tool I need. The analytics are surprisingly detailed for a free product — I can see exactly where my traffic comes from.", stars: 5 },
-              { name: 'David K.', role: 'Freelance Designer', avatar: 'DK', text: "The QR Generator Pro is insane. Custom logos, colors, SVG export — all free. I use it for every client deliverable.", stars: 5 },
-              { name: 'Rachel T.', role: 'E-commerce Owner', avatar: 'RT', text: "I was paying $29/month for a link shortener. ZapKit gives me the same features at zero cost. Switched and never looked back.", stars: 5 },
+              { name: 'Sarah M.', role: 'Marketing Manager', avatar: 'SM', text: "ZapKit is the only link tool I use now. The click analytics are way more detailed than I expected from something free - I can see exactly where traffic is coming from.", stars: 5 },
+              { name: 'David K.', role: 'Freelance Designer', avatar: 'DK', text: "The QR generator is great. Custom logos, colors, SVG export - all free. I use it for client projects all the time.", stars: 5 },
+              { name: 'Rachel T.', role: 'E-commerce Owner', avatar: 'RT', text: "Was paying $29/month for a link shortener with similar features. Made the switch to ZapKit and haven't looked back.", stars: 5 },
             ].map((t) => (
               <div key={t.name} style={{ background: dark ? '#1e293b' : '#ffffff', border: `1px solid ${dark ? '#334155' : '#e2e8f0'}`, borderRadius: 16, padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 <div style={{ display: 'flex', gap: 2 }}>
@@ -252,7 +300,7 @@ export default function HomePage() {
             <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#00C4A7', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 8 }}>Simple by design</div>
             <h2 style={{ fontSize: 'clamp(1.3rem, 4vw, 1.8rem)', fontWeight: 800, color: dark ? '#f1f5f9' : '#0f172a', marginBottom: 8 }}>Everything you need, nothing you don't</h2>
             <p style={{ fontSize: '0.875rem', color: dark ? '#94a3b8' : '#64748b', maxWidth: 480, margin: '0 auto' }}>
-              Use both tools freely — no account required. Create an account only when you want a professional analytics dashboard.
+              Use both tools without an account. Sign up only if you want to track analytics and manage your links over time.
             </p>
           </div>
           {/* Two-column: TinyLink + QR */}
@@ -266,7 +314,7 @@ export default function HomePage() {
                 <span style={{ fontWeight: 700, fontSize: '0.95rem', color: dark ? '#f1f5f9' : '#0f172a' }}>TinyLink Pro</span>
               </div>
               {[
-                { n: '01', title: 'Paste any URL', desc: 'Drop a long link into the field — no account required to shorten.' },
+                { n: '01', title: 'Paste any URL', desc: 'Drop a long link into the field. No account needed to get started.' },
                 { n: '02', title: 'Get a branded short link', desc: 'Your link is ready in milliseconds, with a custom alias option.' },
                 { n: '03', title: 'Track performance', desc: 'Register for a free account to unlock real-time click analytics, device breakdown, and country data.' },
               ].map(s => (
@@ -306,7 +354,7 @@ export default function HomePage() {
           <div style={{ marginTop: '2rem', padding: '1.25rem 1.5rem', borderRadius: 14, background: 'rgba(0,196,167,0.06)', border: '1px solid rgba(0,196,167,0.2)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
             <div>
               <div style={{ fontWeight: 700, fontSize: '0.9rem', color: dark ? '#f1f5f9' : '#0f172a', marginBottom: 3 }}>Want a full analytics dashboard?</div>
-              <div style={{ fontSize: '0.78rem', color: dark ? '#94a3b8' : '#64748b' }}>Create a free account to track every click, scan, device, and country — all in one place.</div>
+              <div style={{ fontSize: '0.78rem', color: dark ? '#94a3b8' : '#64748b' }}>Create a free account to track every click, scan, device, and country in one place.</div>
             </div>
             <button
               onClick={() => { setAuthMode('register'); setShowAuthModal(true) }}
