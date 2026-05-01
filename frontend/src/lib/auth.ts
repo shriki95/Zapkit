@@ -229,6 +229,15 @@ export async function getQRStats(qrCode: string): Promise<QRStats> {
   return res.json()
 }
 
+export async function createQR(qrType: string, content: string): Promise<{ qr_code: string }> {
+  const res = await apiFetch('/api/qr/create', {
+    method: 'POST',
+    body: JSON.stringify({ qr_type: qrType, content }),
+  })
+  if (!res.ok) return { qr_code: '' } // silent fail — QR still generated client-side
+  return res.json()
+}
+
 export async function deleteLink(shortCode: string): Promise<void> {
   const res = await apiFetch(`/api/dashboard/links/${shortCode}`, { method: 'DELETE' })
   if (!res.ok) throw new Error(await parseApiError(res, 'Failed to delete link'))

@@ -12,7 +12,7 @@ import {
   ArrowUpRight, BarChart3, Calendar, ExternalLink, Link2,
   QrCode, RefreshCw, TrendingUp, Eye, Zap,
   LogIn, LogOut, Moon, Sun, Trash2, Settings as SettingsIcon,
-  LayoutDashboard, CheckSquare, Square,
+  LayoutDashboard, CheckSquare, Square, Copy, Check, Download,
 } from 'lucide-react'
 import {
   getDashboard, getLinkStats, getQRStats, logout,
@@ -71,6 +71,8 @@ export default function DashboardPage() {
   const [filter, setFilter] = useState<'all' | 'links' | 'qr'>('all')
   const [deleteConfirm, setDeleteConfirm] = useState<{ type: 'link' | 'qr'; code: string } | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [copiedCode, setCopiedCode] = useState<string | null>(null)
+  const [downloadingQR, setDownloadingQR] = useState<string | null>(null)
 
   useEffect(() => { if (!user) navigate('/') }, [user, navigate])
   useEffect(() => { loadDashboard() }, [])
@@ -129,6 +131,28 @@ export default function DashboardPage() {
   }
 
   const handleLogout = () => { logout(); setUser(null) }
+
+  function handleCopy(text: string, code: string) {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedCode(code)
+      setTimeout(() => setCopiedCode(null), 2000)
+    }).catch(() => {})
+  }
+
+  async function handleQRDownload(content: string, code: string) {
+    try {
+      setDownloadingQR(code)
+      const QRCode = await import('qrcode')
+      const dataUrl = await QRCode.default.toDataURL(content, { width: 512, margin: 2, color: { dark: '#000000', light: '#ffffff' } })
+      const a = document.createElement('a')
+      a.href = dataUrl
+      a.download = `qr-${code}.png`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+    } catch { /* silent */ }
+    finally { setDownloadingQR(null) }
+  }
 
   // ── Aggregate analytics for selected items ────────────────────────────────
 
@@ -380,11 +404,17 @@ export default function DashboardPage() {
                                       </span>
                                     </div>
                                     <p className="text-xs text-slate-500 dark:text-slate-400 truncate mb-2 pl-5">{shortUrl(link.original_url)}</p>
-                                    <div className="flex items-center gap-3 text-[10px] text-slate-400 pl-5">
+                                    <div className="flex items-center gap-3 text-[10px] text-slate-400 pl-5 flex-wrap">
                                       <span className="flex items-center gap-1"><Calendar size={10} /> {fmt(link.created_at)}</span>
                                       <a href={link.short_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-[#00C4A7] transition-colors" onClick={e => e.stopPropagation()}>
                                         <ExternalLink size={10} /> Open
                                       </a>
+                                      <button
+                                        onClick={e => { e.stopPropagation(); handleCopy(link.short_url, link.short_code) }}
+                                        className={`flex items-center gap-1 transition-colors ${copiedCode === link.short_code ? 'text-green-500' : 'hover:text-[#00C4A7]'}`}
+                                      >
+                                        {copiedCode === link.short_code ? <><Check size={10} /> Copied!</> : <><Copy size={10} /> Copy link</>}
+                                      </button>
                                     </div>
                                   </button>
                                   {/* Delete button */}
@@ -430,9 +460,21 @@ export default function DashboardPage() {
                                         {qr.scan_count.toLocaleString()} scans
                                       </span>
                                     </div>
-                                    <p className="font-mono text-xs text-slate-500 dark:text-slate-400 mb-2 pl-5 truncate">{qr.qr_code}</p>
-                                    <div className="text-[10px] text-slate-400 flex items-center gap-1 pl-5">
-                                      <Calendar size={10} /> {fmt(qr.created_at)}
+                                    <p className="font-mono text-xs text-slate-500 dark:text-slate-400 mb-2 pl-5 truncate">{qr.content}</p>
+                                    <div className="text-[10px] text-slate-400 flex items-center gap-3 pl-5 flex-wrap">
+                                      <span className="flex items-center gap-1"><Calendar size={10} /> {fmt(qr.created_at)}</span>
+                                      <button
+                                        onClick={e => { e.stopPropagation(); handleCopy(qr.content, qr.qr_code) }}
+                                        className={`flex items-center gap-1 transition-colors ${copiedCode === qr.qr_code ? 'text-green-500' : 'hover:text-[#00C4A7]'}`}
+                                      >
+                                        {copiedCode === qr.qr_code ? <><Check size={10} /> Copied!</> : <><Copy size={10} /> Copy content</>}
+                                      </button>
+                                      <button
+                                        onClick={e => { e.stopPropagation(); handleQRDownload(qr.content, qr.qr_code) }}
+                                        className="flex items-center gap-1 hover:text-indigo-500 transition-colors"
+                                      >
+                                        <Download size={10} /> {downloadingQR === qr.qr_code ? 'Saving…' : 'Download'}
+                                      </button>
                                     </div>
                                   </button>
                                   {/* Delete button */}

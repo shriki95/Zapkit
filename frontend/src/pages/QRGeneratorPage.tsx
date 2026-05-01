@@ -15,7 +15,7 @@ import { SSLUpload } from '../components/SSLUpload'
 import SEOOptimizer from '../components/SEOOptimizer'
 import AdModal from '../components/AdModal'
 import Settings from '../components/Settings'
-import { logout } from '../lib/auth'
+import { logout, createQR } from '../lib/auth'
 import { useAuth } from '../App'
 
 type AppTab = 'generate' | 'decode' | 'batch' | 'settings'
@@ -139,6 +139,8 @@ export default function QRGeneratorPage() {
           }
           if (user && !savedPayloads.has(payload)) {
             setSavedPayloads(prev => new Set(prev).add(payload))
+            // Auto-save to user's account for dashboard tracking
+            createQR(qrType, payload).catch(() => {})
           }
           setIsGenerating(false)
           return 100
