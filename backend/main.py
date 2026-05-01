@@ -304,7 +304,8 @@ async def redirect(
     # Log click (fire-and-forget)
     asyncio.create_task(_log_click(link.id, request))
 
-    return RedirectResponse(url=link.original_url, status_code=301)
+    # 302 (temporary) so browsers never cache — allows deactivation to take effect immediately
+    return RedirectResponse(url=link.original_url, status_code=302)
 
 
 async def _log_click(link_id: str, request: Request):
@@ -804,6 +805,49 @@ async def track_link(
     return {"ok": True, "message": "Link is now being tracked"}
 
 
+# ── QR Redirect (deactivatable URL-type QRs) ──────────────────────────────────
+
+@app.get("/q/{qr_code}")
+async def redirect_qr(
+    qr_code: str,
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Redirect endpoint for URL-type QR codes.
+    QR images encode this URL instead of the destination directly,
+    so deactivating a QR code (is_active=False) immediately stops it from working.
+    """
+    result = await db.execute(
+        select(QRCode).where(QRCode.qr_code == qr_code, QRCode.is_active == True)
+    )
+    qr = result.scalar_one_or_none()
+
+    if not qr:
+        raise HTTPException(status_code=410, detail="This QR code has been deactivated or does not exist.")
+
+    # Log scan (fire-and-forget)
+    asyncio.create_task(_log_qr_scan_task(qr.id, request))
+
+    return RedirectResponse(url=qr.content, status_code=302)
+
+
+async def _log_qr_scan_task(qr_id: str, request: Request):
+    ip = request.client.host if request.client else "unknown"
+    ua_string = request.headers.get("user-agent", "")
+    country = await lookup_country(ip)
+    async with AsyncSessionLocal() as db:
+        scan = QRScan(
+            qr_id=qr_id,
+            ip_hash=hash_ip(ip),
+            user_agent=ua_string,
+            device_type=get_device_type(ua_string),
+            country=country,
+        )
+        db.add(scan)
+        await db.commit()
+
+
 # ── QR Code Management ────────────────────────────────────────────────────────
 
 @app.post("/api/qr/create", response_model=QRCodeResponse)
@@ -875,11 +919,13 @@ async def log_qr_scan(
     db: AsyncSession = Depends(get_db),
 ):
     """Log a QR code scan"""
-    result = await db.execute(select(QRCode).where(QRCode.qr_code == qr_code))
+    result = await db.execute(
+        select(QRCode).where(QRCode.qr_code == qr_code, QRCode.is_active == True)
+    )
     qr = result.scalar_one_or_none()
-    
+
     if not qr:
-        raise HTTPException(status_code=404, detail="QR code not found")
+        raise HTTPException(status_code=410, detail="QR code not found or deactivated")
     
     # Log scan
     ip = request.client.host if request.client else "unknown"

@@ -22,6 +22,8 @@ import {
 import { useAuth } from '../App'
 import Settings from '../components/Settings'
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface DashboardData {
@@ -473,7 +475,14 @@ export default function DashboardPage() {
                                         {copiedCode === qr.qr_code ? <><Check size={10} /> Copied!</> : <><Copy size={10} /> Copy content</>}
                                       </button>
                                       <button
-                                        onClick={e => { e.stopPropagation(); handleQRDownload(qr.content, qr.qr_code) }}
+                                        onClick={e => {
+                                          e.stopPropagation()
+                                          // Link-type QRs: download with the backend redirect URL so they stay deactivatable
+                                          const downloadContent = qr.qr_type === 'link'
+                                            ? `${API_BASE}/q/${qr.qr_code}`
+                                            : qr.content
+                                          handleQRDownload(downloadContent, qr.qr_code)
+                                        }}
                                         className="flex items-center gap-1 hover:text-indigo-500 transition-colors"
                                       >
                                         <Download size={10} /> {downloadingQR === qr.qr_code ? 'Saving…' : 'Download'}

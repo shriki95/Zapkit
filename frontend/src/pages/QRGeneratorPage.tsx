@@ -17,6 +17,8 @@ import AdModal from '../components/AdModal'
 import { logout, createQR } from '../lib/auth'
 import { useAuth } from '../App'
 
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
 type AppTab = 'generate' | 'decode' | 'batch'
 
 const TABS = [
@@ -128,11 +130,24 @@ export default function QRGeneratorPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [payload])
 
-  function handleGenerate() {
+  async function handleGenerate() {
     if (!payload || isGenerating) return
     setIsGenerating(true)
     setLoadingProgress(0)
     setGeneratedPayload(null)
+
+    // For URL-type QRs when logged in: encode a backend redirect URL so the QR
+    // can be deactivated later. Backend checks is_active before redirecting.
+    let finalPayload = payload
+    if (qrType === 'link' && user && !savedPayloads.has(payload)) {
+      try {
+        const result = await createQR(qrType, payload)
+        if (result.qr_code) {
+          finalPayload = `${API_BASE}/q/${result.qr_code}`
+          setSavedPayloads(prev => new Set(prev).add(payload))
+        }
+      } catch { /* fall back to original URL */ }
+    }
 
     const loadingInterval = setInterval(() => {
       setLoadingProgress(prev => {
@@ -141,14 +156,14 @@ export default function QRGeneratorPage() {
           const newCount = qrCount + 1
           setQrCount(newCount)
           if (newCount % 2 === 0) {
-            setPendingQRPayload(payload)
+            setPendingQRPayload(finalPayload)
             setShowAdModal(true)
           } else {
-            setGeneratedPayload(payload)
+            setGeneratedPayload(finalPayload)
           }
-          if (user && !savedPayloads.has(payload)) {
+          // For non-link types or logged-out users: auto-save normally
+          if (user && qrType !== 'link' && !savedPayloads.has(payload)) {
             setSavedPayloads(prev => new Set(prev).add(payload))
-            // Auto-save to user's account for dashboard tracking
             createQR(qrType, payload).catch(() => {})
           }
           setIsGenerating(false)

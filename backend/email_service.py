@@ -62,7 +62,7 @@ async def send_password_reset_email(
     qr_data = f"ZAPKIT-RESET:{verification_code}"
     qr_code_data = generate_qr_code(qr_data)
     
-    subject = "🔐 Password Reset - ZapKit"
+    subject = "Password Reset - ZapKit"
     
     html_body = f"""
     <!DOCTYPE html>
@@ -147,32 +147,8 @@ async def send_password_reset_email(
         print("="*80 + "\n")
         return True, qr_code_data
     
-    # Real email sending (requires SMTP configuration)
-    try:
-        import smtplib
-        from email.mime.text import MIMEText
-        from email.mime.multipart import MIMEMultipart
-        
-        msg = MIMEMultipart('alternative')
-        msg['Subject'] = subject
-        msg['From'] = f"{FROM_NAME} <{FROM_EMAIL}>"
-        msg['To'] = to_email
-        
-        # Attach HTML body
-        html_part = MIMEText(html_body, 'html')
-        msg.attach(html_part)
-        
-        # Send email
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
-            server.starttls()
-            server.login(SMTP_USER, SMTP_PASSWORD)
-            server.send_message(msg)
-        
-        return True, qr_code_data
-        
-    except Exception as e:
-        print(f"❌ Failed to send email: {e}")
-        return False, qr_code_data
+    # Real email sending
+    return await _send_smtp(to_email, subject, html_body), qr_code_data
 
 
 async def send_welcome_email(to_email: str, name: Optional[str] = None) -> bool:
@@ -181,7 +157,7 @@ async def send_welcome_email(to_email: str, name: Optional[str] = None) -> bool:
     """
     display_name = name or to_email.split('@')[0]
     
-    subject = "🎉 Welcome to ZapKit!"
+    subject = "Welcome to ZapKit!"
     
     html_body = f"""
     <!DOCTYPE html>
@@ -256,26 +232,41 @@ async def send_welcome_email(to_email: str, name: Optional[str] = None) -> bool:
         return True
     
     # Real email sending
+    return await _send_smtp(to_email, subject, html_body)
+
+
+async def _send_smtp(to_email: str, subject: str, html_body: str) -> bool:
+    """Send via SMTP — supports both STARTTLS (port 587) and SSL (port 465)."""
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+
+    if not SMTP_USER or not SMTP_PASSWORD:
+        print("❌ SMTP credentials not configured (SMTP_USER / SMTP_PASSWORD missing)")
+        return False
+
+    msg = MIMEMultipart('alternative')
+    msg['Subject'] = subject
+    msg['From'] = f"{FROM_NAME} <{FROM_EMAIL}>"
+    msg['To'] = to_email
+    msg.attach(MIMEText(html_body, 'html'))
+
     try:
-        import smtplib
-        from email.mime.text import MIMEText
-        from email.mime.multipart import MIMEMultipart
-        
-        msg = MIMEMultipart('alternative')
-        msg['Subject'] = subject
-        msg['From'] = f"{FROM_NAME} <{FROM_EMAIL}>"
-        msg['To'] = to_email
-        
-        html_part = MIMEText(html_body, 'html')
-        msg.attach(html_part)
-        
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
-            server.starttls()
-            server.login(SMTP_USER, SMTP_PASSWORD)
-            server.send_message(msg)
-        
+        if SMTP_PORT == 465:
+            import ssl
+            ctx = ssl.create_default_context()
+            with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, context=ctx) as server:
+                server.login(SMTP_USER, SMTP_PASSWORD)
+                server.send_message(msg)
+        else:
+            with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+                server.ehlo()
+                server.starttls()
+                server.ehlo()
+                server.login(SMTP_USER, SMTP_PASSWORD)
+                server.send_message(msg)
+        print(f"✅ Email sent to {to_email}")
         return True
-        
     except Exception as e:
-        print(f"❌ Failed to send email: {e}")
+        print(f"❌ Failed to send email to {to_email}: {e}")
         return False
