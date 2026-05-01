@@ -7,6 +7,7 @@ import QRGeneratorPage from './pages/QRGeneratorPage'
 import PrivacyPage from './pages/PrivacyPage'
 import TermsPage from './pages/TermsPage'
 import ContactPage from './pages/ContactPage'
+import DashboardPage from './pages/DashboardPage'
 import AuthModal from './components/AuthModal'
 import GDPRBanner from './components/GDPRBanner'
 
@@ -146,6 +147,7 @@ export default function App() {
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/contact" element={<ContactPage />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
 

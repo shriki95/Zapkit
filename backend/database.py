@@ -30,3 +30,21 @@ async def get_db():
 async def init_db():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        # Safe column migrations (add only if missing)
+        is_pg = "postgresql" in str(DATABASE_URL)
+        if is_pg:
+            migrations = [
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS two_fa_secret VARCHAR(64)",
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS two_fa_enabled BOOLEAN DEFAULT FALSE",
+            ]
+        else:
+            # SQLite doesn't support IF NOT EXISTS in ALTER TABLE; use try/except
+            migrations = [
+                "ALTER TABLE users ADD COLUMN two_fa_secret VARCHAR(64)",
+                "ALTER TABLE users ADD COLUMN two_fa_enabled BOOLEAN DEFAULT 0",
+            ]
+        for sql in migrations:
+            try:
+                await conn.execute(__import__('sqlalchemy').text(sql))
+            except Exception:
+                pass  # Column already exists

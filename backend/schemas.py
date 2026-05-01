@@ -172,6 +172,7 @@ class UserResponse(BaseModel):
     name: str | None
     created_at: datetime
     is_active: bool
+    two_fa_enabled: bool = False
 
     model_config = {"from_attributes": True}
 

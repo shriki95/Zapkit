@@ -76,7 +76,7 @@ export default function HomePage() {
           {user ? (
             <>
               <Link
-                to="/tinylink"
+                to="/dashboard"
                 style={{ padding: '6px 14px', background: '#00C4A7', color: 'white', textDecoration: 'none', borderRadius: 8, fontSize: '0.875rem', fontWeight: 600 }}
               >
                 My Dashboard

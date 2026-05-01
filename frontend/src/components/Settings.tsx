@@ -1,10 +1,21 @@
-import { useState } from 'react'
-import { User, Shield, Bell, Palette, Trash2, CheckCircle, AlertCircle, Copy, Check, Lock, Eye, EyeOff } from 'lucide-react'
-import { enable2FA, verify2FA, getUser, changePassword, type User as UserType } from '../lib/auth'
+import { useEffect, useState } from 'react'
+import { User, Shield, Palette, CheckCircle, AlertCircle, Copy, Check, Lock, Eye, EyeOff, Link2, QrCode, TrendingUp, BarChart3 } from 'lucide-react'
+import { enable2FA, verify2FA, getUser, changePassword, getDashboard, type User as UserType } from '../lib/auth'
 
 export default function Settings() {
   const [user, setUser] = useState<UserType | null>(getUser())
   const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'preferences'>('profile')
+  // Real stats from API
+  const [stats, setStats] = useState<{ links: number; qr: number; clicks: number; scans: number } | null>(null)
+
+  useEffect(() => {
+    getDashboard().then(d => setStats({
+      links: d.total_links ?? 0,
+      qr: d.total_qr_codes ?? 0,
+      clicks: d.total_clicks ?? 0,
+      scans: d.total_scans ?? 0,
+    })).catch(() => {})
+  }, [])
 
   // 2FA state
   const [show2FASetup, setShow2FASetup] = useState(false)
@@ -65,9 +76,10 @@ export default function Settings() {
       setQrCode(null)
       setSecret(null)
       setVerificationCode('')
-      // Update user state to reflect 2FA enabled
+      // Mark 2FA as enabled in local state
       if (user) {
-        setUser({ ...user, is_active: true }) // Mock: in real app, user would have 2fa_enabled field
+        const updated = { ...user, two_fa_enabled: true } as any
+        setUser(updated)
       }
     } catch (err: any) {
       setError(err.message || 'Invalid verification code')
@@ -190,26 +202,26 @@ export default function Settings() {
             </div>
           </div>
 
-          {/* Account Stats */}
+          {/* Account Stats — real data */}
           <div className="card p-6">
             <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Account Statistics</h3>
             <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-800">
-                <div className="text-2xl font-bold text-[#00C4A7]">3</div>
-                <div className="text-sm text-slate-600 dark:text-slate-400">Total Links</div>
-              </div>
-              <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-800">
-                <div className="text-2xl font-bold text-[#00C4A7]">2</div>
-                <div className="text-sm text-slate-600 dark:text-slate-400">QR Codes</div>
-              </div>
-              <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-800">
-                <div className="text-2xl font-bold text-[#00C4A7]">1,890</div>
-                <div className="text-sm text-slate-600 dark:text-slate-400">Total Clicks</div>
-              </div>
-              <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-800">
-                <div className="text-2xl font-bold text-[#00C4A7]">198</div>
-                <div className="text-sm text-slate-600 dark:text-slate-400">Total Scans</div>
-              </div>
+              {[
+                { icon: Link2, label: 'Shortened Links', value: stats?.links },
+                { icon: QrCode, label: 'QR Codes Created', value: stats?.qr },
+                { icon: TrendingUp, label: 'Total Link Clicks', value: stats?.clicks },
+                { icon: BarChart3, label: 'Total QR Scans', value: stats?.scans },
+              ].map(({ icon: Icon, label, value }) => (
+                <div key={label} className="p-4 rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-800/50 border border-slate-200 dark:border-slate-700">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Icon size={14} className="text-[#00C4A7]" />
+                    <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{label}</span>
+                  </div>
+                  <div className="text-2xl font-bold text-slate-900 dark:text-white">
+                    {stats === null ? <span className="text-slate-300 dark:text-slate-600 text-base">Loading…</span> : (value ?? 0).toLocaleString()}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -234,14 +246,20 @@ export default function Settings() {
 
             {!show2FASetup ? (
               <div className="space-y-4">
-                <div className="flex items-center gap-3 p-4 rounded-lg bg-slate-50 dark:bg-slate-800">
-                  <Shield size={24} className="text-[#00C4A7]" />
+                <div className="flex items-center gap-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                  <Shield size={24} className="text-[#00C4A7] flex-shrink-0" />
                   <div className="flex-1">
-                    <div className="font-semibold text-slate-900 dark:text-white">Status: Disabled</div>
-                    <div className="text-sm text-slate-600 dark:text-slate-400">
-                      Enable 2FA to protect your account with Google Authenticator
+                    <div className="font-semibold text-slate-900 dark:text-white">
+                      Two-Factor Authentication — <span className="text-slate-500 dark:text-slate-400">Not active</span>
+                    </div>
+                    <div className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+                      Protect your account with a one-time code from your phone.
+                      Even if someone steals your password, they can't log in without your device.
                     </div>
                   </div>
+                </div>
+                <div className="rounded-xl border border-blue-100 dark:border-blue-900/40 bg-blue-50 dark:bg-blue-900/20 p-3 text-xs text-blue-700 dark:text-blue-300">
+                  <strong>How it works:</strong> After enabling, you'll scan a QR code with Google Authenticator or Authy. Every time you log in, you'll enter a 6-digit code from the app in addition to your password.
                 </div>
 
                 <button

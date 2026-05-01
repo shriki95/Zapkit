@@ -1028,31 +1028,68 @@ async def get_dashboard_qr_analytics(
 
 
 @app.post("/api/auth/2fa/enable")
-async def enable_2fa(current_user: User = Depends(get_current_user)):
-    secret = secrets.token_urlsafe(16).replace("-", "")[:24].upper()
-    qr_payload = f"otpauth://totp/ZapKit:{current_user.email}?secret={secret}&issuer=ZapKit"
-
-    import qrcode
-
-    img = qrcode.make(qr_payload)
+async def enable_2fa(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    import pyotp
+    secret = pyotp.random_base32()
+    qr_payload = pyotp.totp.TOTP(secret).provisioning_uri(
+        name=current_user.email,
+        issuer_name="ZapKit"
+    )
+    img = __import__('qrcode').make(qr_payload)
     buffer = io.BytesIO()
     img.save(buffer, format="PNG")
-    qr_code = "data:image/png;base64," + base64.b64encode(buffer.getvalue()).decode("ascii")
+    qr_image = "data:image/png;base64," + base64.b64encode(buffer.getvalue()).decode("ascii")
 
-    return {"qr_code": qr_code, "secret": secret}
+    # Save secret to user record (pending confirmation — will be activated on verify)
+    current_user.two_fa_secret = secret
+    await db.commit()
+
+    return {"qr_code": qr_image, "secret": secret}
 
 
 @app.post("/api/auth/2fa/verify")
-async def verify_2fa(body: dict, current_user: User = Depends(get_current_user)):
+async def verify_2fa(
+    body: dict,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    import pyotp
     code = str(body.get("code", ""))
     if not code.isdigit() or len(code) != 6:
-        raise HTTPException(status_code=400, detail="Invalid 2FA code")
-    return {"message": "2FA enabled successfully"}
+        raise HTTPException(status_code=400, detail="Enter a 6-digit code from your authenticator app")
+
+    if not current_user.two_fa_secret:
+        raise HTTPException(status_code=400, detail="Start 2FA setup first — generate a QR code before verifying")
+
+    totp = pyotp.TOTP(current_user.two_fa_secret)
+    if not totp.verify(code, valid_window=1):
+        raise HTTPException(status_code=400, detail="Incorrect code. Make sure your phone clock is synced and try again")
+
+    current_user.two_fa_enabled = True
+    await db.commit()
+    return {"message": "Two-factor authentication is now active on your account"}
 
 
 @app.post("/api/auth/2fa/disable")
-async def disable_2fa(body: dict, current_user: User = Depends(get_current_user)):
+async def disable_2fa(
+    body: dict,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    import pyotp
     code = str(body.get("code", ""))
     if not code.isdigit() or len(code) != 6:
-        raise HTTPException(status_code=400, detail="Invalid 2FA code")
-    return {"message": "2FA disabled successfully"}
+        raise HTTPException(status_code=400, detail="Enter a 6-digit code from your authenticator app")
+
+    if current_user.two_fa_enabled and current_user.two_fa_secret:
+        totp = pyotp.TOTP(current_user.two_fa_secret)
+        if not totp.verify(code, valid_window=1):
+            raise HTTPException(status_code=400, detail="Incorrect code")
+
+    current_user.two_fa_enabled = False
+    current_user.two_fa_secret = None
+    await db.commit()
+    return {"message": "Two-factor authentication has been disabled"}

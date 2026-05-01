@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Moon, Sun, Link2, LayoutDashboard, Zap, Share2, LogIn, LogOut, User as UserIcon } from 'lucide-react'
+import { Moon, Sun, Link2, LayoutDashboard, Zap, Share2, Globe, LogIn, LogOut, User as UserIcon } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../App'
 import SEOOptimizer from '../components/SEOOptimizer'
@@ -258,13 +258,13 @@ export default function TinyLinkPage() {
                 <>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8">
                     {[
-                      { icon: '⚡', label: 'Instant', desc: 'Links ready in milliseconds' },
-                      { icon: '📊', label: 'Analytics', desc: 'Real-time click tracking' },
-                      { icon: '📱', label: 'QR Code', desc: 'One click via QR Generator Pro' },
-                      { icon: '🌍', label: 'Global', desc: 'Country & device insights' },
+                      { icon: <Zap size={20} className="text-amber-500" />, label: 'Instant', desc: 'Links ready in milliseconds' },
+                      { icon: <LayoutDashboard size={20} className="text-teal-500" />, label: 'Analytics', desc: 'Real-time click tracking' },
+                      { icon: <Share2 size={20} className="text-violet-500" />, label: 'QR Code', desc: 'One click via QR Generator Pro' },
+                      { icon: <Globe size={20} className="text-blue-500" />, label: 'Global', desc: 'Country & device insights' },
                     ].map((f, i) => (
                       <div key={i} className="card p-4 text-center">
-                        <div className="text-2xl mb-2">{f.icon}</div>
+                        <div className="flex justify-center mb-2">{f.icon}</div>
                         <div className="font-semibold text-sm text-slate-800 dark:text-slate-200">{f.label}</div>
                         <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{f.desc}</div>
                       </div>

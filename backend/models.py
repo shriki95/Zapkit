@@ -22,6 +22,9 @@ class User(Base):
     failed_login_attempts: Mapped[int] = mapped_column(default=0)
     locked_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
+    two_fa_secret: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    two_fa_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+
     links: Mapped[list["Link"]] = relationship("Link", back_populates="user")
     qr_codes: Mapped[list["QRCode"]] = relationship("QRCode", back_populates="user")
     password_resets: Mapped[list["PasswordReset"]] = relationship("PasswordReset", back_populates="user", cascade="all, delete-orphan")
