@@ -1,22 +1,20 @@
 import { useEffect, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Moon, Sun, Link2, LayoutDashboard, Zap, Share2, Globe, LogIn, LogOut, User as UserIcon } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../App'
 import SEOOptimizer from '../components/SEOOptimizer'
 import UsageModal from '../components/UsageModal'
-import Dashboard from '../components/Dashboard'
 import Settings from '../components/Settings'
 import ShortenForm from '../features/links/ShortenForm'
 import ResultCard from '../features/links/ResultCard'
 import { logout } from '../lib/auth'
 import type { ShortenResponse } from '../features/links/types'
 
-type Tab = 'shorten' | 'dashboard' | 'settings'
+type Tab = 'shorten' | 'settings'
 
 const TABS = [
   { id: 'shorten' as Tab, label: 'Shorten', icon: Link2 },
-  { id: 'dashboard' as Tab, label: 'Dashboard', icon: LayoutDashboard, authRequired: true },
   { id: 'settings' as Tab, label: 'Settings', icon: UserIcon, authRequired: true },
 ]
 
@@ -26,6 +24,7 @@ const COMPANY_TAGLINE = 'Free digital tools, built to last.'
 export default function TinyLinkPage() {
   const { user, setUser, dark, setDark, setShowAuthModal, setAuthMode } = useAuth()
   const location = useLocation()
+  const navigate = useNavigate()
 
   const [tab, setTab] = useState<Tab>('shorten')
   const [result, setResult] = useState<ShortenResponse | null>(null)
@@ -121,7 +120,7 @@ export default function TinyLinkPage() {
             {user ? (
               <>
                 <button
-                  onClick={() => setTab('dashboard')}
+                  onClick={() => navigate('/dashboard')}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                   title="My Dashboard"
                 >
@@ -278,16 +277,6 @@ export default function TinyLinkPage() {
                   </div>
                 </>
               )}
-            </motion.div>
-          )}
-
-          {tab === 'dashboard' && (
-            <motion.div key="dashboard" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <div className="mb-6">
-                <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">My Dashboard</h2>
-                <p className="text-slate-600 dark:text-slate-400">Track all your links and QR codes in one place</p>
-              </div>
-              <Dashboard />
             </motion.div>
           )}
 

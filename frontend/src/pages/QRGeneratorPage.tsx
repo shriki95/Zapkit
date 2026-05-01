@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { FileSpreadsheet, Moon, QrCode, ScanLine, Share2, Sun, Zap, LayoutDashboard, LogIn, LogOut, User as UserIcon, Settings as SettingsIcon } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { FileSpreadsheet, Moon, QrCode, ScanLine, Share2, Sun, Zap, LogIn, LogOut, User as UserIcon, Settings as SettingsIcon } from 'lucide-react'
 import type QRCodeStyling from 'qr-code-styling'
 import { buildQrPayload } from '../features/qr/payload'
 import type { DesignOptions, QrContentState, QrType } from '../features/qr/types'
@@ -14,23 +14,22 @@ import { BatchProcessor } from '../features/qr/BatchProcessor'
 import { SSLUpload } from '../components/SSLUpload'
 import SEOOptimizer from '../components/SEOOptimizer'
 import AdModal from '../components/AdModal'
-import Dashboard from '../components/Dashboard'
 import Settings from '../components/Settings'
 import { logout } from '../lib/auth'
 import { useAuth } from '../App'
 
-type AppTab = 'generate' | 'decode' | 'batch' | 'dashboard' | 'settings'
+type AppTab = 'generate' | 'decode' | 'batch' | 'settings'
 
 const TABS = [
   { id: 'generate' as AppTab, label: 'Generate', icon: QrCode },
   { id: 'decode' as AppTab, label: 'Decode', icon: ScanLine },
   { id: 'batch' as AppTab, label: 'Batch', icon: FileSpreadsheet },
-  { id: 'dashboard' as AppTab, label: 'Dashboard', icon: LayoutDashboard, authRequired: true },
   { id: 'settings' as AppTab, label: 'Settings', icon: SettingsIcon, authRequired: true },
 ]
 
 export default function QRGeneratorPage() {
   const { user, setUser, dark, setDark, setShowAuthModal, setAuthMode } = useAuth()
+  const navigate = useNavigate()
 
   const [appTab, setAppTab] = useState<AppTab>('generate')
   const [qrType, setQrType] = useState<QrType>('link')
@@ -215,7 +214,7 @@ export default function QRGeneratorPage() {
             {user ? (
               <>
                 <button
-                  onClick={() => setAppTab('dashboard')}
+                  onClick={() => navigate('/dashboard')}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                 >
                   <UserIcon size={15} />
@@ -529,13 +528,6 @@ export default function QRGeneratorPage() {
               <div className="text-center text-slate-400 text-sm">Google Ad<br/>336x280</div>
             </div>
           </div>
-        </main>
-      )}
-
-      {/* Dashboard Tab */}
-      {appTab === 'dashboard' && user && (
-        <main className="mx-auto max-w-6xl px-4 py-6">
-          <Dashboard />
         </main>
       )}
 
