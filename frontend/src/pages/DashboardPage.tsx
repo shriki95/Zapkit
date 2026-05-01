@@ -3,7 +3,7 @@
  * Route: /dashboard  |  Tabs: Analytics · Settings
  */
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -60,8 +60,11 @@ function qrTypeLabel(t: string) {
 export default function DashboardPage() {
   const { user, setUser, dark, setDark, setShowAuthModal, setAuthMode } = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
 
-  const [pageTab, setPageTab] = useState<PageTab>('analytics')
+  const [pageTab, setPageTab] = useState<PageTab>(
+    searchParams.get('tab') === 'settings' ? 'settings' : 'analytics'
+  )
   const [data, setData] = useState<DashboardData | null>(null)
   const [selected, setSelected] = useState<SelectedItem[]>([])
   const [analyticsMap, setAnalyticsMap] = useState<Record<string, LinkStats | QRStats>>({})

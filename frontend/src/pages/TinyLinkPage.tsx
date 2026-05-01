@@ -1,21 +1,19 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Moon, Sun, Link2, LayoutDashboard, Zap, Share2, Globe, LogIn, LogOut, User as UserIcon } from 'lucide-react'
+import { Moon, Sun, Link2, LayoutDashboard, Zap, Share2, Globe, LogIn, LogOut, ChevronDown, Settings as SettingsIcon } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../App'
 import SEOOptimizer from '../components/SEOOptimizer'
 import UsageModal from '../components/UsageModal'
-import Settings from '../components/Settings'
 import ShortenForm from '../features/links/ShortenForm'
 import ResultCard from '../features/links/ResultCard'
 import { logout } from '../lib/auth'
 import type { ShortenResponse } from '../features/links/types'
 
-type Tab = 'shorten' | 'settings'
+type Tab = 'shorten'
 
 const TABS = [
   { id: 'shorten' as Tab, label: 'Shorten', icon: Link2 },
-  { id: 'settings' as Tab, label: 'Settings', icon: UserIcon, authRequired: true },
 ]
 
 const COMPANY = 'ZapKit'
@@ -30,6 +28,17 @@ export default function TinyLinkPage() {
   const [result, setResult] = useState<ShortenResponse | null>(null)
   const [shareCopied, setShareCopied] = useState(false)
   const [isShortening, setIsShortening] = useState(false)
+  const [showUserMenu, setShowUserMenu] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!showUserMenu) return
+    const handler = (e: MouseEvent) => {
+      if (!menuRef.current?.contains(e.target as Node)) setShowUserMenu(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [showUserMenu])
 
   // Check URL parameters for login modal (e.g. ?showLogin=true)
   useEffect(() => {
@@ -45,15 +54,10 @@ export default function TinyLinkPage() {
     logout()
     setUser(null)
     setTab('shorten')
+    setShowUserMenu(false)
   }
 
   const handleTabClick = (tabId: Tab) => {
-    const tabConfig = TABS.find(t => t.id === tabId)
-    if (tabConfig?.authRequired && !user) {
-      setAuthMode('login')
-      setShowAuthModal(true)
-      return
-    }
     setTab(tabId)
   }
 
@@ -68,7 +72,7 @@ export default function TinyLinkPage() {
     }
   }
 
-  const visibleTabs = TABS.filter(t => !t.authRequired || user)
+  const visibleTabs = TABS
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
@@ -118,23 +122,36 @@ export default function TinyLinkPage() {
           {/* Right actions */}
           <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
             {user ? (
-              <>
+              <div className="relative" ref={menuRef}>
                 <button
-                  onClick={() => navigate('/dashboard')}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                  title="My Dashboard"
+                  onClick={() => setShowUserMenu(m => !m)}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-semibold bg-[#00C4A7]/10 border border-[#00C4A7]/20 text-slate-800 dark:text-white hover:bg-[#00C4A7]/15 transition-colors"
                 >
-                  <UserIcon size={15} />
-                  <span className="hidden sm:inline">{user.name || user.email.split('@')[0]}</span>
+                  <div className="w-6 h-6 rounded-full bg-[#00C4A7] flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                    {(user.name ?? user.email)[0].toUpperCase()}
+                  </div>
+                  <span className="hidden sm:inline max-w-[120px] truncate">{user.name ?? user.email.split('@')[0]}</span>
+                  <ChevronDown size={13} className={`transition-transform duration-200 ${showUserMenu ? 'rotate-180' : ''}`} />
                 </button>
-                <button
-                  onClick={handleLogout}
-                  className="p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                  title="Logout"
-                >
-                  <LogOut size={18} />
-                </button>
-              </>
+                {showUserMenu && (
+                  <div className="absolute right-0 top-full mt-2 w-52 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-xl overflow-hidden z-50">
+                    <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800">
+                      <p className="text-xs text-slate-500 dark:text-slate-400">Signed in as</p>
+                      <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{user.name ?? user.email.split('@')[0]}</p>
+                    </div>
+                    <button onClick={() => { navigate('/dashboard'); setShowUserMenu(false) }} className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                      <LayoutDashboard size={15} className="text-[#00C4A7]" /> My Dashboard
+                    </button>
+                    <button onClick={() => { navigate('/dashboard?tab=settings'); setShowUserMenu(false) }} className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                      <SettingsIcon size={15} className="text-slate-400" /> Settings
+                    </button>
+                    <div className="border-t border-slate-100 dark:border-slate-800" />
+                    <button onClick={handleLogout} className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                      <LogOut size={15} /> Log out
+                    </button>
+                  </div>
+                )}
+              </div>
             ) : (
               <button
                 onClick={() => { setAuthMode('login'); setShowAuthModal(true) }}
@@ -280,11 +297,6 @@ export default function TinyLinkPage() {
             </motion.div>
           )}
 
-          {tab === 'settings' && (
-            <motion.div key="settings" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <Settings />
-            </motion.div>
-          )}
         </AnimatePresence>
       </main>
 

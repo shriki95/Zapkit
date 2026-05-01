@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
-import { User, Shield, Palette, CheckCircle, AlertCircle, Copy, Check, Lock, Eye, EyeOff, Link2, QrCode, TrendingUp, BarChart3, Trash2, Bell } from 'lucide-react'
+import { User, Shield, Palette, CheckCircle, AlertCircle, Copy, Check, Lock, Eye, EyeOff, Link2, QrCode, TrendingUp, BarChart3, Trash2, Bell, Save } from 'lucide-react'
 import { enable2FA, verify2FA, getUser, changePassword, getDashboard, type User as UserType } from '../lib/auth'
+import { useAuth } from '../App'
 
 export default function Settings() {
+  const { dark, setDark } = useAuth()
   const [user, setUser] = useState<UserType | null>(getUser())
   const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'preferences'>('profile')
   // Real stats from API
@@ -44,8 +46,12 @@ export default function Settings() {
   // Preferences state
   const [emailNotifications, setEmailNotifications] = useState(true)
   const [analyticsEmails, setAnalyticsEmails] = useState(false)
-  const [theme, setTheme] = useState<'light' | 'dark' | 'system'>('system')
+  const [themeMode, setThemeMode] = useState<'light' | 'dark' | 'system'>(() => {
+    return (localStorage.getItem('zapkit-theme-mode') as 'light' | 'dark' | 'system') ?? (dark ? 'dark' : 'light')
+  })
   const [accentKit, setAccentKit] = useState<string>(() => localStorage.getItem('zapkit-accent') ?? 'teal')
+  const [pendingAccent, setPendingAccent] = useState<string>(() => localStorage.getItem('zapkit-accent') ?? 'teal')
+  const [themeSaved, setThemeSaved] = useState(false)
 
   const ACCENT_KITS = [
     { id: 'teal',   name: 'ZapKit Teal',   color: '#00C4A7', desc: 'Original brand — always fresh' },
@@ -55,11 +61,21 @@ export default function Settings() {
     { id: 'sky',    name: 'Sky Blue',      color: '#0ea5e9', desc: 'Clean and trustworthy' },
   ]
 
-  const applyAccent = (kit: string) => {
-    setAccentKit(kit)
-    localStorage.setItem('zapkit-accent', kit)
-    if (kit === 'teal') document.documentElement.removeAttribute('data-accent')
-    else document.documentElement.setAttribute('data-accent', kit)
+  const applyThemeMode = (mode: 'light' | 'dark' | 'system') => {
+    setThemeMode(mode)
+    localStorage.setItem('zapkit-theme-mode', mode)
+    if (mode === 'light') setDark(false)
+    else if (mode === 'dark') setDark(true)
+    else setDark(window.matchMedia('(prefers-color-scheme: dark)').matches)
+  }
+
+  const saveAccent = () => {
+    setAccentKit(pendingAccent)
+    localStorage.setItem('zapkit-accent', pendingAccent)
+    if (pendingAccent === 'teal') document.documentElement.removeAttribute('data-accent')
+    else document.documentElement.setAttribute('data-accent', pendingAccent)
+    setThemeSaved(true)
+    setTimeout(() => setThemeSaved(false), 2000)
   }
 
   const handle2FAEnable = async () => {
@@ -526,29 +542,27 @@ export default function Settings() {
               Appearance
             </h3>
             <div className="space-y-3">
-              {(['light', 'dark', 'system'] as const).map(option => (
+              {([
+                { value: 'light', label: 'Light', desc: 'Light mode', bg: 'bg-white border-2 border-slate-300' },
+                { value: 'dark',  label: 'Dark',  desc: 'Dark mode',  bg: 'bg-slate-900 border-2 border-slate-700' },
+                { value: 'system',label: 'System',desc: 'Match system preference', bg: 'bg-gradient-to-br from-white to-slate-900 border-2 border-slate-400' },
+              ] as const).map(option => (
                 <label
-                  key={option}
+                  key={option.value}
                   className="flex items-center justify-between p-4 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-lg ${
-                      option === 'light' ? 'bg-white border-2 border-slate-300' :
-                      option === 'dark' ? 'bg-slate-900 border-2 border-slate-700' :
-                      'bg-gradient-to-br from-white to-slate-900 border-2 border-slate-400'
-                    }`} />
+                    <div className={`w-10 h-10 rounded-lg ${option.bg}`} />
                     <div>
-                      <div className="font-semibold text-slate-900 dark:text-white capitalize">{option}</div>
-                      <div className="text-sm text-slate-600 dark:text-slate-400">
-                        {option === 'system' ? 'Match system preference' : `${option} mode`}
-                      </div>
+                      <div className="font-semibold text-slate-900 dark:text-white">{option.label}</div>
+                      <div className="text-sm text-slate-600 dark:text-slate-400">{option.desc}</div>
                     </div>
                   </div>
                   <input
                     type="radio"
                     name="theme"
-                    checked={theme === option}
-                    onChange={() => setTheme(option)}
+                    checked={themeMode === option.value}
+                    onChange={() => applyThemeMode(option.value)}
                     className="w-5 h-5 text-[#00C4A7] focus:ring-[#00C4A7]"
                   />
                 </label>
@@ -558,31 +572,51 @@ export default function Settings() {
 
           {/* Color Theme Kits */}
           <div className="card p-6">
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1 flex items-center gap-2">
-              <Palette size={20} />
-              Color Theme
-            </h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
-              Choose an accent color kit. Your ZapKit branding and identity remain consistent across all themes.
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="flex items-start justify-between mb-1 gap-4">
+              <div>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Palette size={20} />
+                  Color Theme
+                </h3>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                  Choose an accent color kit and press Save to apply.
+                </p>
+              </div>
+              <button
+                onClick={saveAccent}
+                disabled={pendingAccent === accentKit}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap flex-shrink-0 ${
+                  themeSaved
+                    ? 'bg-green-500 text-white'
+                    : pendingAccent === accentKit
+                    ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
+                    : 'bg-[#00C4A7] text-white hover:bg-[#00B096]'
+                }`}
+              >
+                {themeSaved ? <><Check size={14} /> Saved!</> : <><Save size={14} /> Save Theme</>}
+              </button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
               {ACCENT_KITS.map(kit => (
                 <button
                   key={kit.id}
-                  onClick={() => applyAccent(kit.id)}
+                  onClick={() => setPendingAccent(kit.id)}
                   className={`flex items-center gap-3 p-3.5 rounded-xl border-2 transition-all text-left ${
-                    accentKit === kit.id
-                      ? 'border-current shadow-md'
+                    pendingAccent === kit.id
+                      ? 'shadow-md'
                       : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
                   }`}
-                  style={accentKit === kit.id ? { borderColor: kit.color } : {}}
+                  style={pendingAccent === kit.id ? { borderColor: kit.color } : {}}
                 >
                   <div className="w-10 h-10 rounded-xl flex-shrink-0 shadow-sm" style={{ background: kit.color }} />
-                  <div className="min-w-0">
-                    <div className="font-semibold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="font-semibold text-sm text-slate-900 dark:text-white flex items-center gap-2 flex-wrap">
                       {kit.name}
                       {accentKit === kit.id && (
                         <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white" style={{ background: kit.color }}>Active</span>
+                      )}
+                      {pendingAccent === kit.id && pendingAccent !== accentKit && (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300">Selected</span>
                       )}
                     </div>
                     <div className="text-xs text-slate-500 dark:text-slate-400 truncate">{kit.desc}</div>
