@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { Link2, ChevronDown, ChevronUp, Wand2 } from 'lucide-react'
+import { Link2, ChevronDown, ChevronUp, Wand2, Settings2 } from 'lucide-react'
 import type { ShortenRequest, ShortenResponse } from './types'
 import { incrementUsage } from '../../components/UsageModal'
 import AdModal from '../../components/AdModal'
+import InfoTooltip from '../../components/InfoTooltip'
 import { getToken } from '../../lib/auth'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
@@ -18,6 +19,7 @@ export default function ShortenForm({ onResult, onRefreshLinks, onLoadingChange 
   const [url, setUrl] = useState('')
   const [alias, setAlias] = useState('')
   const [expiresAt, setExpiresAt] = useState('')
+  const [optionsOpen, setOptionsOpen] = useState(false)
   const [utmOpen, setUtmOpen] = useState(false)
   const [utm, setUtm] = useState({ source: '', medium: '', campaign: '', content: '', term: '' })
   const [loading, setLoading] = useState(false)
@@ -137,59 +139,84 @@ export default function ShortenForm({ onResult, onRefreshLinks, onLoadingChange 
         />
       </div>
 
-      {/* Options row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Custom Alias (optional)</label>
-          <div className="flex items-center gap-1">
-            <span className="text-xs text-slate-400 shrink-0">tinylink.pro/</span>
-            <input
-              type="text"
-              value={alias}
-              onChange={e => setAlias(e.target.value.replace(/[^a-z0-9-_]/gi, '').toLowerCase())}
-              placeholder="my-link"
-              className="input-field text-sm py-2"
-            />
-          </div>
-        </div>
-        <div className="min-w-0">
-          <label className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">Expiry Date (optional)</label>
-          <input
-            type="date"
-            value={expiresAt}
-            onChange={e => setExpiresAt(e.target.value)}
-            min={new Date().toISOString().split('T')[0]}
-            className="input-field text-sm py-2 w-full max-w-full"
-            style={{ minWidth: 0 }}
-          />
-        </div>
-      </div>
-
-      {/* UTM Builder */}
+      {/* Optional Settings — collapsed by default */}
       <div>
         <button
           type="button"
-          onClick={() => setUtmOpen(o => !o)}
-          className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-[#00C4A7] transition-colors"
+          onClick={() => setOptionsOpen(o => !o)}
+          className="flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-[#00C4A7] transition-colors"
         >
-          <Wand2 size={14} />
-          UTM Parameters {utmOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          <Settings2 size={13} />
+          Optional settings
+          {optionsOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
         </button>
 
-        {utmOpen && (
-          <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
-            {(['source', 'medium', 'campaign', 'content', 'term'] as const).map(key => (
-              <div key={key}>
-                <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1 capitalize">utm_{key}</label>
+        {optionsOpen && (
+          <div className="mt-3 space-y-3">
+            {/* Custom Alias + Expiry */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                  Custom Alias
+                  <InfoTooltip text="Choose a custom ending for your short URL (e.g. tinylink.pro/my-brand). Leave blank for a random code." />
+                </label>
+                <div className="flex items-center gap-1">
+                  <span className="text-xs text-slate-400 shrink-0">tinylink.pro/</span>
+                  <input
+                    type="text"
+                    value={alias}
+                    onChange={e => setAlias(e.target.value.replace(/[^a-z0-9-_]/gi, '').toLowerCase())}
+                    placeholder="my-link"
+                    className="input-field text-sm py-2"
+                  />
+                </div>
+              </div>
+              <div className="min-w-0">
+                <label className="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                  Expiry Date
+                  <InfoTooltip text="The link will stop working after this date. Leave blank for a permanent link." />
+                </label>
                 <input
-                  type="text"
-                  value={utm[key]}
-                  onChange={e => setUtm(u => ({ ...u, [key]: e.target.value }))}
-                  placeholder={key === 'source' ? 'e.g. twitter' : key === 'medium' ? 'e.g. social' : ''}
-                  className="input-field text-xs py-2"
+                  type="date"
+                  value={expiresAt}
+                  onChange={e => setExpiresAt(e.target.value)}
+                  min={new Date().toISOString().split('T')[0]}
+                  className="input-field text-sm py-2 w-full max-w-full"
+                  style={{ minWidth: 0 }}
                 />
               </div>
-            ))}
+            </div>
+
+            {/* UTM Builder */}
+            <div>
+              <button
+                type="button"
+                onClick={() => setUtmOpen(o => !o)}
+                className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-[#00C4A7] transition-colors"
+              >
+                <Wand2 size={13} />
+                UTM Parameters
+                <InfoTooltip text="Add UTM tags to track where your traffic comes from in Google Analytics (source, medium, campaign)." />
+                {utmOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+              </button>
+
+              {utmOpen && (
+                <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  {(['source', 'medium', 'campaign', 'content', 'term'] as const).map(key => (
+                    <div key={key}>
+                      <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1 capitalize">utm_{key}</label>
+                      <input
+                        type="text"
+                        value={utm[key]}
+                        onChange={e => setUtm(u => ({ ...u, [key]: e.target.value }))}
+                        placeholder={key === 'source' ? 'e.g. twitter' : key === 'medium' ? 'e.g. social' : ''}
+                        className="input-field text-xs py-2"
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>

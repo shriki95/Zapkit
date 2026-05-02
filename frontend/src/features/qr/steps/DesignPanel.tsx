@@ -1,6 +1,7 @@
 import type { ChangeEvent } from 'react'
 import type { DesignOptions } from '../types'
 import { Field, Input } from './fields'
+import InfoTooltip from '../../../components/InfoTooltip'
 
 type Props = {
   value: DesignOptions
@@ -111,7 +112,7 @@ export function DesignPanel({ value, onChange }: Props) {
               </option>
             ))}
           </select>
-          <div className="mt-1 text-xs text-slate-500">This only affects the on-page preview.</div>
+          <InfoTooltip text="This only affects the on-page preview size. The downloaded QR will always be full resolution." size={12} />
         </label>
         <label className="block">
           <div className="mb-1 text-sm font-semibold text-slate-900">Frame color</div>

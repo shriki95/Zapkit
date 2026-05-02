@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { X, Mail, Lock, User as UserIcon, AlertCircle, CheckCircle, Eye, EyeOff } from 'lucide-react'
+import InfoTooltip from './InfoTooltip'
 import { useGoogleLogin } from '@react-oauth/google'
 import { register, login, loginWithGoogle, requestPasswordReset, verifyPasswordReset, type RegisterData, type LoginData } from '../lib/auth'
 
@@ -265,9 +266,9 @@ export default function AuthModal({ isOpen, onClose, onSuccess, mode: initialMod
                 </button>
               </div>
               {mode === 'register' && (
-                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                  Min 8 chars · uppercase · lowercase · number · special char (!@#$%)
-                </p>
+                <div className="mt-1 flex items-center gap-1">
+                  <InfoTooltip text="Min 8 chars · uppercase · lowercase · number · special char (!@#$%)" size={12} />
+                </div>
               )}
               {mode === 'login' && (
                 <div className="mt-1.5 text-left">
@@ -315,9 +316,9 @@ export default function AuthModal({ isOpen, onClose, onSuccess, mode: initialMod
                   className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#00C4A7] focus:border-transparent text-center text-2xl tracking-widest font-mono"
                   placeholder="000000"
                 />
-                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                  Enter the 6-digit code from your email
-                </p>
+                <div className="mt-1 flex items-center gap-1">
+                  <InfoTooltip text="Enter the 6-digit code sent to your email address." size={12} />
+                </div>
               </div>
 
               <div>
@@ -347,9 +348,9 @@ export default function AuthModal({ isOpen, onClose, onSuccess, mode: initialMod
                     {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
-                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                  At least 6 characters
-                </p>
+                <div className="mt-1 flex items-center gap-1">
+                  <InfoTooltip text="At least 6 characters." size={12} />
+                </div>
               </div>
             </>
           )}

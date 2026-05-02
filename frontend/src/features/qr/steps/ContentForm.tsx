@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { QrContentState, QrType, SocialPlatform } from '../types'
 import { Field, Input, Textarea } from './fields'
+import InfoTooltip from '../../../components/InfoTooltip'
 
 // ── Country Code Picker ───────────────────────────────────────────────────────
 const COUNTRY_CODES = [
@@ -177,9 +178,7 @@ export function ContentForm({ qrType, value, onChange }: Props) {
         <Field label="Website URL" required hint="Example: https://example.com">
           <Input value={value.linkUrl} onChange={(v) => patch({ linkUrl: v })} placeholder="https://..." />
         </Field>
-        <p className="text-xs text-slate-500 dark:text-slate-400">
-          Tip: paste a domain without https:// and we'll add it automatically.
-        </p>
+        <InfoTooltip text="Tip: paste a domain without https:// and we'll add it automatically." />
       </div>
     )
   }
@@ -353,9 +352,7 @@ export function ContentForm({ qrType, value, onChange }: Props) {
         <Field label="URL" required hint="PDF / Image / Video">
           <Input value={value.mediaUrl} onChange={(v) => patch({ mediaUrl: v })} placeholder="https://..." />
         </Field>
-        <p className="text-xs text-slate-500 dark:text-slate-400">
-          Works with any direct link: PDF documents, images (JPG/PNG), videos (MP4), or hosted files.
-        </p>
+        <InfoTooltip text="Works with any direct link: PDF documents, images (JPG/PNG), videos (MP4), or hosted files." />
       </div>
     )
   }
@@ -378,9 +375,7 @@ export function ContentForm({ qrType, value, onChange }: Props) {
             placeholder="https://play.google.com/store/apps/..."
           />
         </Field>
-        <p className="text-xs text-slate-500 dark:text-slate-400">
-          Tip: provide both links for the best experience. The QR will use the iOS link, and Android users can still access it.
-        </p>
+        <InfoTooltip text="Tip: provide both links for the best experience. The QR will use the iOS link, and Android users can still access it." />
       </div>
     )
   }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { User, Shield, Palette, CheckCircle, AlertCircle, Copy, Check, Lock, Eye, EyeOff, Link2, QrCode, TrendingUp, BarChart3, Trash2, Bell, Save } from 'lucide-react'
+import InfoTooltip from './InfoTooltip'
 import { enable2FA, verify2FA, getUser, changePassword, getDashboard, type User as UserType } from '../lib/auth'
 import { useAuth } from '../App'
 import { applyAccentOverride } from '../lib/theme'
@@ -218,9 +219,7 @@ export default function Settings() {
                   disabled
                   className="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 cursor-not-allowed"
                 />
-                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                  Email cannot be changed
-                </p>
+                <div className="mt-1"><InfoTooltip text="Email address cannot be changed after registration." size={12} /></div>
               </div>
 
               <div className="flex items-center gap-3 pt-2">
@@ -455,7 +454,7 @@ export default function Settings() {
                     {showNewPw ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
-                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Min 8 characters</p>
+                <div className="mt-1"><InfoTooltip text="Min 8 characters · uppercase · lowercase · number · special char" size={12} /></div>
               </div>
 
               {/* Confirm Password */}
