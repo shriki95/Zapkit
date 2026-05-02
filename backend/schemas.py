@@ -69,6 +69,12 @@ class StatsResponse(BaseModel):
     countries: list[CountryItem]
 
 
+# ── Google OAuth ─────────────────────────────────────────────────────────────
+
+class GoogleAuthRequest(BaseModel):
+    credential: str  # Google ID token
+
+
 # ── User Authentication Schemas ──────────────────────────────────────────────
 
 class UserRegister(BaseModel):

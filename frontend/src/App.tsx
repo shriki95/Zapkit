@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { GoogleOAuthProvider } from '@react-oauth/google'
 import { getUser, initAutoLogout, type User } from './lib/auth'
 import { applyAccentOverride } from './lib/theme'
 import HomePage from './pages/HomePage'
@@ -144,6 +145,7 @@ export default function App() {
   }
 
   return (
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID ?? ''}>
     <AuthContext.Provider value={{ user, setUser, showAuthModal, setShowAuthModal, authMode, setAuthMode, dark, setDark }}>
       <BrowserRouter>
         <ScrollToTop />
@@ -170,5 +172,6 @@ export default function App() {
         <GDPRBanner />
       </BrowserRouter>
     </AuthContext.Provider>
+    </GoogleOAuthProvider>
   )
 }

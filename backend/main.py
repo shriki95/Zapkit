@@ -30,6 +30,7 @@ from schemas import (
     UserLogin,
     UserResponse,
     TokenResponse,
+    GoogleAuthRequest,
     PasswordResetRequest,
     PasswordResetVerify,
     PasswordResetResponse,
@@ -476,6 +477,66 @@ async def register(
     access_token = create_access_token(data={"sub": user.id})
     _set_auth_cookies(response, access_token, user)
     
+    return TokenResponse(
+        access_token=access_token,
+        user=UserResponse.model_validate(user),
+    )
+
+
+@app.post("/api/auth/google", response_model=TokenResponse)
+async def google_auth(
+    body: GoogleAuthRequest,
+    response: Response,
+    db: AsyncSession = Depends(get_db),
+):
+    """Sign in / register via Google OAuth (one-tap or popup flow)."""
+    import os
+    from google.oauth2 import id_token as google_id_token
+    from google.auth.transport import requests as google_requests
+
+    GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
+    if not GOOGLE_CLIENT_ID:
+        raise HTTPException(status_code=500, detail="Google OAuth not configured")
+
+    try:
+        idinfo = google_id_token.verify_oauth2_token(
+            body.credential,
+            google_requests.Request(),
+            GOOGLE_CLIENT_ID,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=f"Invalid Google token: {exc}")
+
+    email = idinfo.get("email", "").lower().strip()
+    name  = idinfo.get("name") or idinfo.get("given_name")
+    if not email:
+        raise HTTPException(status_code=400, detail="Google account has no email")
+
+    # Find existing user or create a new one
+    result = await db.execute(select(User).where(User.email == email))
+    user = result.scalar_one_or_none()
+
+    if not user:
+        user = User(
+            id=str(uuid.uuid4()),
+            email=email,
+            name=name,
+            hashed_password="!oauth:google",  # sentinel — no password login for OAuth users
+            is_active=True,
+            email_verified=True,             # Google already verified the email
+        )
+        db.add(user)
+        await db.commit()
+        await db.refresh(user)
+    else:
+        # Update name if missing
+        if not user.name and name:
+            user.name = name
+            await db.commit()
+            await db.refresh(user)
+
+    access_token = create_access_token(data={"sub": user.id})
+    _set_auth_cookies(response, access_token, user)
     return TokenResponse(
         access_token=access_token,
         user=UserResponse.model_validate(user),

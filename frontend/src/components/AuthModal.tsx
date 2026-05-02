@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { X, Mail, Lock, User as UserIcon, AlertCircle, CheckCircle, Eye, EyeOff } from 'lucide-react'
-import { register, login, requestPasswordReset, verifyPasswordReset, type RegisterData, type LoginData } from '../lib/auth'
+import { GoogleLogin } from '@react-oauth/google'
+import { register, login, loginWithGoogle, requestPasswordReset, verifyPasswordReset, type RegisterData, type LoginData } from '../lib/auth'
 
 interface AuthModalProps {
   isOpen: boolean
@@ -135,6 +136,39 @@ export default function AuthModal({ isOpen, onClose, onSuccess, mode: initialMod
           <div className="mb-4 flex items-center gap-2 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-3 text-sm text-red-700 dark:text-red-400">
             <AlertCircle size={16} />
             {error}
+          </div>
+        )}
+
+        {/* Google Sign In — only on login / register screens */}
+        {(mode === 'login' || mode === 'register') && (
+          <div className="mb-5">
+            <GoogleLogin
+              onSuccess={async (res) => {
+                if (!res.credential) return
+                setLoading(true)
+                setError('')
+                try {
+                  await loginWithGoogle(res.credential)
+                  onSuccess()
+                  onClose()
+                } catch (err: unknown) {
+                  setError(err instanceof Error ? err.message : 'Google sign-in failed')
+                } finally {
+                  setLoading(false)
+                }
+              }}
+              onError={() => setError('Google sign-in failed. Please try again.')}
+              width="100%"
+              theme="outline"
+              shape="rectangular"
+              text={mode === 'register' ? 'signup_with' : 'signin_with'}
+              locale="en"
+            />
+            <div className="flex items-center gap-3 my-5">
+              <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700" />
+              <span className="text-xs text-slate-400 font-medium">or continue with email</span>
+              <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700" />
+            </div>
           </div>
         )}
 

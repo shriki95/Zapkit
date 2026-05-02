@@ -193,6 +193,17 @@ export async function login(data: LoginData): Promise<AuthResponse> {
   return authData
 }
 
+export async function loginWithGoogle(credential: string): Promise<AuthResponse> {
+  const res = await apiFetch('/api/auth/google', {
+    method: 'POST',
+    body: JSON.stringify({ credential }),
+  })
+  if (!res.ok) throw new Error(await parseApiError(res, 'Google sign-in failed'))
+  const authData: AuthResponse = await res.json()
+  saveAuth(authData.access_token, authData.user)
+  return authData
+}
+
 export function logout() {
   clearAuth()
   window.location.reload()
