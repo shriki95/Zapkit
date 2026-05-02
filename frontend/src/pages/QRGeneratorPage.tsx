@@ -430,12 +430,6 @@ export default function QRGeneratorPage() {
                       <div className="mt-1 text-xs text-slate-600 dark:text-slate-400">
                         👆 Choose a QR type on the left, fill in the details, then click <strong>Generate</strong>.
                       </div>
-                      <div className="mt-6 rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-600 dark:bg-slate-800">
-                        <div className="text-xs text-slate-500 dark:text-slate-400 mb-2">Advertisement</div>
-                        <div className="bg-white dark:bg-slate-900 rounded border min-h-[250px] flex items-center justify-center">
-                          <div className="text-center text-slate-400 text-sm">Google Ad<br/>300x250</div>
-                        </div>
-                      </div>
                     </div>
                   </div>
                 )}
@@ -503,12 +497,6 @@ export default function QRGeneratorPage() {
               Decode a QR Code
             </div>
             <QrDecoder />
-            <div className="mt-6 rounded-lg border border-slate-200 bg-slate-50 p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-              <div className="text-xs text-slate-500 dark:text-slate-400 mb-3 text-center">Advertisement</div>
-              <div className="bg-white dark:bg-slate-900 rounded border min-h-[280px] flex items-center justify-center">
-                <div className="text-center text-slate-400 text-sm">Google Ad<br/>336x280</div>
-              </div>
-            </div>
           </div>
         </main>
       )}
@@ -521,12 +509,6 @@ export default function QRGeneratorPage() {
             <p className="mt-1 text-slate-600 dark:text-slate-400">Upload a CSV file with names and URLs to generate multiple QR codes at once</p>
           </div>
           <BatchProcessor />
-          <div className="mt-6 rounded-lg border border-slate-200 bg-slate-50 p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-            <div className="text-xs text-slate-500 dark:text-slate-400 mb-3 text-center">Advertisement</div>
-            <div className="bg-white dark:bg-slate-900 rounded border min-h-[280px] flex items-center justify-center">
-              <div className="text-center text-slate-400 text-sm">Google Ad<br/>336x280</div>
-            </div>
-          </div>
         </main>
       )}
 
@@ -583,12 +565,6 @@ export default function QRGeneratorPage() {
               </div>
               <h3 className="mb-2 text-lg font-semibold text-slate-900 dark:text-slate-100">QR Code Downloaded! ✓</h3>
               <p className="mb-6 text-sm text-slate-600 dark:text-slate-400">Your QR code has been saved successfully</p>
-              <div className="mb-6 rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-600 dark:bg-slate-800">
-                <div className="text-xs text-slate-500 dark:text-slate-400 mb-2 text-center">Advertisement</div>
-                <div className="bg-white dark:bg-slate-900 rounded border min-h-[200px] flex items-center justify-center">
-                  <div className="text-center text-slate-400 text-sm">Google Ad<br/>320x200</div>
-                </div>
-              </div>
               <button onClick={() => setShowDownloadModal(false)} className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">Close</button>
             </div>
           </div>

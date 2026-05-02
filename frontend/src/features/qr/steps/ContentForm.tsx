@@ -167,9 +167,8 @@ export function ContentForm({ qrType, value, onChange }: Props) {
   if (qrType === 'link') {
     return (
       <div className="space-y-3">
-        <RequiredHint text="Enter a URL to enable QR generation" />
-        <Field label="Website URL" required hint="Example: https://example.com">
-          <Input value={value.linkUrl} onChange={(v) => patch({ linkUrl: v })} placeholder="https://..." />
+        <Field label="Website URL" required>
+          <Input value={value.linkUrl} onChange={(v) => patch({ linkUrl: v })} placeholder="yourwebsite.com" />
         </Field>
       </div>
     )

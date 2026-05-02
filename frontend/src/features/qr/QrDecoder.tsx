@@ -150,17 +150,6 @@ export function QrDecoder() {
               ></div>
             </div>
             
-            {/* Ad Space During Decoding */}
-            <div className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-600 dark:bg-slate-900 max-w-sm mx-auto">
-              <div className="text-xs text-slate-500 dark:text-slate-400 mb-2">Advertisement</div>
-              <div className="bg-slate-50 dark:bg-slate-800 rounded border min-h-[100px] flex items-center justify-center">
-                <div className="text-center text-slate-400 text-sm">
-                  Google Ad<br/>
-                  320x100<br/>
-                  <div className="text-xs mt-1">(Decoding Banner)</div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       )}

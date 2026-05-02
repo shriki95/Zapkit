@@ -259,12 +259,6 @@ export default function TinyLinkPage() {
                       setShowAuthModal(true)
                     }}
                   />
-                  <div className="card p-4">
-                    <div className="text-xs text-slate-500 dark:text-slate-400 mb-3 text-center">Advertisement</div>
-                    <div className="bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 min-h-[200px] flex items-center justify-center">
-                      <div className="text-center text-slate-400 text-sm">Google Ad<br/>728x90</div>
-                    </div>
-                  </div>
                 </>
               )}
 
@@ -283,12 +277,6 @@ export default function TinyLinkPage() {
                         <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{f.desc}</div>
                       </div>
                     ))}
-                  </div>
-                  <div className="card p-4">
-                    <div className="text-xs text-slate-500 dark:text-slate-400 mb-3 text-center">Advertisement</div>
-                    <div className="bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-700 min-h-[250px] flex items-center justify-center">
-                      <div className="text-center text-slate-400 text-sm">Google Ad<br/>728x90 or 300x250</div>
-                    </div>
                   </div>
                 </>
               )}
