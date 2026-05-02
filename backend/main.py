@@ -31,6 +31,7 @@ from schemas import (
     UserResponse,
     TokenResponse,
     GoogleAuthRequest,
+    GoogleCredentialRequest,
     PasswordResetRequest,
     PasswordResetVerify,
     PasswordResetResponse,
@@ -543,17 +544,17 @@ async def google_auth(
 
 @app.post("/api/auth/google-credential", response_model=TokenResponse)
 async def google_credential_auth(
-    body: GoogleAuthRequest,
+    body: GoogleCredentialRequest,
     response: Response,
     db: AsyncSession = Depends(get_db),
 ):
-    """Sign in via Google ID token (credential) — used on mobile."""
+    """Sign in via Google ID token (credential) — from GoogleLogin component."""
     import httpx
 
     try:
         async with httpx.AsyncClient() as client:
             resp = await client.get(
-                f"https://oauth2.googleapis.com/tokeninfo?id_token={body.access_token}",
+                f"https://oauth2.googleapis.com/tokeninfo?id_token={body.credential}",
                 timeout=10,
             )
         if resp.status_code != 200:

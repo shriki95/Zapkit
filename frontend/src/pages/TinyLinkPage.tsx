@@ -4,7 +4,6 @@ import { Moon, Sun, Link2, LayoutDashboard, Zap, Share2, Globe, LogIn, LogOut, C
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../App'
 import SEOOptimizer from '../components/SEOOptimizer'
-import UsageModal from '../components/UsageModal'
 import ShortenForm from '../features/links/ShortenForm'
 import ResultCard from '../features/links/ResultCard'
 import { logout } from '../lib/auth'
@@ -77,7 +76,6 @@ export default function TinyLinkPage() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
       <SEOOptimizer activeTab={tab} />
-      <UsageModal />
 
       {/* Header */}
       <header className="sticky top-0 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur border-b border-slate-200 dark:border-slate-800">

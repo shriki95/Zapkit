@@ -171,7 +171,6 @@ export function ContentForm({ qrType, value, onChange }: Props) {
         <Field label="Website URL" required hint="Example: https://example.com">
           <Input value={value.linkUrl} onChange={(v) => patch({ linkUrl: v })} placeholder="https://..." />
         </Field>
-        <InfoTooltip text="Tip: paste a domain without https:// and we'll add it automatically." />
       </div>
     )
   }

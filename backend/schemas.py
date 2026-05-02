@@ -74,6 +74,9 @@ class StatsResponse(BaseModel):
 class GoogleAuthRequest(BaseModel):
     access_token: str  # Google OAuth access token
 
+class GoogleCredentialRequest(BaseModel):
+    credential: str  # Google ID token (from GoogleLogin component)
+
 
 # ── User Authentication Schemas ──────────────────────────────────────────────
 

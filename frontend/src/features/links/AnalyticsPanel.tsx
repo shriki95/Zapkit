@@ -5,7 +5,6 @@ import {
 } from 'recharts'
 import { BarChart2, Globe, Monitor, Smartphone, Tablet, Wifi, X } from 'lucide-react'
 import type { StatsResponse } from './types'
-import AdUnit from '../../components/AdUnit'
 
 const COLORS = ['#00C4A7', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6']
 const DEVICE_ICON: Record<string, React.ReactNode> = {
@@ -176,7 +175,6 @@ export default function AnalyticsPanel({ shortCode, shortUrl, onClose }: Props) 
           )}
 
           {/* Google Ad */}
-          <AdUnit slot="5566778899" format="horizontal" className="rounded-xl" />
         </>
       )}
     </div>

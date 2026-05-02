@@ -3,7 +3,6 @@ import type { ReactNode } from 'react'
 import { Check, Copy, ExternalLink, Share2, Twitter, Facebook, Linkedin, Mail, MessageCircle, Send, QrCode, ChevronDown, ChevronUp, TrendingUp } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { ShortenResponse } from './types'
-import AdUnit from '../../components/AdUnit'
 
 // Single app — use React Router path
 const QR_APP_URL = '/qr'
@@ -214,7 +213,6 @@ export default function ResultCard({ result, showTrackButton = false, onTrackCli
       )}
 
       {/* Google Ad below result */}
-      <AdUnit slot="1234567890" format="horizontal" className="rounded-xl overflow-hidden" />
     </motion.div>
   )
 }

@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { ExternalLink, Trash2, BarChart2, Search, Copy, Check } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import type { LinkItem } from './types'
-import AdUnit from '../../components/AdUnit'
 
 interface Props {
   links: LinkItem[]
@@ -117,7 +116,6 @@ export default function LinkDashboard({ links, loading, onDelete, onSelect, sele
 
       {/* Google Ad */}
       <div className="p-4 border-t border-slate-100 dark:border-slate-700">
-        <AdUnit slot="1122334455" format="rectangle" />
       </div>
     </div>
   )

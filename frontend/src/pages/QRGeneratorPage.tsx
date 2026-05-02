@@ -13,7 +13,6 @@ import { QrDecoder } from '../features/qr/QrDecoder'
 import { BatchProcessor } from '../features/qr/BatchProcessor'
 import { SSLUpload } from '../components/SSLUpload'
 import SEOOptimizer from '../components/SEOOptimizer'
-import AdModal from '../components/AdModal'
 import { logout, createQR } from '../lib/auth'
 import { useAuth } from '../App'
 
@@ -50,11 +49,6 @@ export default function QRGeneratorPage() {
     frameBorder: true,
     ...QR_PRESETS[0].options,
   })
-  const [showUsageModal, setShowUsageModal] = useState(false)
-  const [usageModalTimer, setUsageModalTimer] = useState(5)
-  const [showAdModal, setShowAdModal] = useState(false)
-  const [pendingQRPayload, setPendingQRPayload] = useState<string | null>(null)
-  const [qrCount, setQrCount] = useState(0)
   const [savedPayloads, setSavedPayloads] = useState<Set<string>>(() => new Set())
   const [showUserMenu, setShowUserMenu] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -101,22 +95,6 @@ export default function QRGeneratorPage() {
     socialHandle: '',
   })
 
-  // Track usage count
-  useEffect(() => {
-    const count = parseInt(localStorage.getItem('qr-usage-count') || '0')
-    if (count >= 2 && !localStorage.getItem('qr-usage-modal-shown')) {
-      setShowUsageModal(true)
-      localStorage.setItem('qr-usage-modal-shown', 'true')
-    }
-  }, [])
-
-  // Usage modal countdown
-  useEffect(() => {
-    if (showUsageModal && usageModalTimer > 0) {
-      const timer = setTimeout(() => setUsageModalTimer(prev => prev - 1), 1000)
-      return () => clearTimeout(timer)
-    }
-  }, [showUsageModal, usageModalTimer])
 
   const payload = useMemo(() => buildQrPayload(qrType, content), [content, qrType])
 
@@ -153,16 +131,7 @@ export default function QRGeneratorPage() {
       setLoadingProgress(prev => {
         if (prev >= 100) {
           clearInterval(loadingInterval)
-          const newCount = qrCount + 1
-          setQrCount(newCount)
-          if (newCount % 2 !== 0) {
-            // every odd generation: show result directly
-            setGeneratedPayload(finalPayload)
-          } else {
-            // every even generation: show ad first, then result
-            setPendingQRPayload(finalPayload)
-            setShowAdModal(true)
-          }
+          setGeneratedPayload(finalPayload)
           // For non-link types or logged-out users: auto-save normally
           if (user && qrType !== 'link' && !savedPayloads.has(payload)) {
             setSavedPayloads(prev => new Set(prev).add(payload))
@@ -174,14 +143,6 @@ export default function QRGeneratorPage() {
         return prev + 2
       })
     }, 60)
-  }
-
-  const handleAdClose = () => {
-    setShowAdModal(false)
-    if (pendingQRPayload) {
-      setGeneratedPayload(pendingQRPayload)
-      setPendingQRPayload(null)
-    }
   }
 
   const handleLogout = () => {
@@ -634,35 +595,6 @@ export default function QRGeneratorPage() {
         </div>
       )}
 
-      {/* Usage Modal (forced ad after 2 uses) */}
-      {showUsageModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
-          <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-700 dark:bg-slate-900">
-            <div className="text-center">
-              <div className="mb-4 flex items-center justify-between">
-                <div className="text-sm text-slate-600 dark:text-slate-400">Advertisement</div>
-                <div className="text-sm text-slate-500 dark:text-slate-400">{usageModalTimer > 0 ? `${usageModalTimer}s` : ''}</div>
-              </div>
-              <div className="mb-6 rounded-lg border border-slate-200 bg-slate-50 p-4 dark:border-slate-600 dark:bg-slate-800">
-                <div className="bg-white dark:bg-slate-900 rounded border min-h-[300px] flex items-center justify-center">
-                  <div className="text-center text-slate-400">
-                    <div className="text-lg mb-2">Google Interstitial Ad</div>
-                    <div className="text-sm">468x300</div>
-                  </div>
-                </div>
-              </div>
-              <button onClick={() => setShowUsageModal(false)} disabled={usageModalTimer > 0}
-                className="w-full rounded-xl bg-blue-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {usageModalTimer > 0 ? `Continue in ${usageModalTimer}s` : 'Continue'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Ad Modal */}
-      <AdModal isOpen={showAdModal} onClose={handleAdClose} waitTime={8} />
 
       {/* SEO Optimizer */}
       <SEOOptimizer activeTab={appTab} />

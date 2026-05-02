@@ -2,8 +2,6 @@ import { useState } from 'react'
 import { Link2, ChevronDown, ChevronUp, Wand2, Settings2 } from 'lucide-react'
 // ChevronDown/Up used for optionsOpen toggle
 import type { ShortenRequest, ShortenResponse } from './types'
-import { incrementUsage } from '../../components/UsageModal'
-import AdModal from '../../components/AdModal'
 import InfoTooltip from '../../components/InfoTooltip'
 import { getToken } from '../../lib/auth'
 
@@ -25,9 +23,6 @@ export default function ShortenForm({ onResult, onRefreshLinks, onLoadingChange 
   const [loading, setLoading] = useState(false)
   const [loadingProgress, setLoadingProgress] = useState(0)
   const [error, setError] = useState('')
-  const [showAdModal, setShowAdModal] = useState(false)
-  const [pendingResult, setPendingResult] = useState<ShortenResponse | null>(null)
-  const [linkCount, setLinkCount] = useState(0)
 
   const isValidUrl = (v: string) => {
     try { new URL(v.startsWith('http') ? v : `https://${v}`); return true } catch { return false }
@@ -86,20 +81,7 @@ export default function ShortenForm({ onResult, onRefreshLinks, onLoadingChange 
       
       const data: ShortenResponse = await res.json()
       
-      // Check if we should show ad (every 2 links)
-      const newCount = linkCount + 1
-      setLinkCount(newCount)
-      
-      if (newCount % 2 === 0) {
-        // Show ad modal
-        setPendingResult(data)
-        setShowAdModal(true)
-      } else {
-        // Show result immediately
-        onResult(data)
-      }
-      
-      incrementUsage()
+      onResult(data)
       onRefreshLinks()
       setUrl('')
       setAlias('')
@@ -114,13 +96,6 @@ export default function ShortenForm({ onResult, onRefreshLinks, onLoadingChange 
     }
   }
 
-  const handleAdClose = () => {
-    setShowAdModal(false)
-    if (pendingResult) {
-      onResult(pendingResult)
-      setPendingResult(null)
-    }
-  }
 
   return (
     <form onSubmit={submit} className="card p-5 space-y-4">
@@ -254,7 +229,6 @@ export default function ShortenForm({ onResult, onRefreshLinks, onLoadingChange 
       </button>
 
       {/* Ad Modal */}
-      <AdModal isOpen={showAdModal} onClose={handleAdClose} waitTime={5} />
     </form>
   )
 }
