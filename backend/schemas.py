@@ -72,7 +72,7 @@ class StatsResponse(BaseModel):
 # ── Google OAuth ─────────────────────────────────────────────────────────────
 
 class GoogleAuthRequest(BaseModel):
-    credential: str  # Google ID token
+    access_token: str  # Google OAuth access token
 
 
 # ── User Authentication Schemas ──────────────────────────────────────────────

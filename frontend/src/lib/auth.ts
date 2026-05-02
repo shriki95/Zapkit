@@ -193,10 +193,10 @@ export async function login(data: LoginData): Promise<AuthResponse> {
   return authData
 }
 
-export async function loginWithGoogle(credential: string): Promise<AuthResponse> {
+export async function loginWithGoogle(accessToken: string): Promise<AuthResponse> {
   const res = await apiFetch('/api/auth/google', {
     method: 'POST',
-    body: JSON.stringify({ credential }),
+    body: JSON.stringify({ access_token: accessToken }),
   })
   if (!res.ok) throw new Error(await parseApiError(res, 'Google sign-in failed'))
   const authData: AuthResponse = await res.json()

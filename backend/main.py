@@ -489,23 +489,21 @@ async def google_auth(
     response: Response,
     db: AsyncSession = Depends(get_db),
 ):
-    """Sign in / register via Google OAuth (one-tap or popup flow)."""
-    import os
-    from google.oauth2 import id_token as google_id_token
-    from google.auth.transport import requests as google_requests
-
-    GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
-    if not GOOGLE_CLIENT_ID:
-        raise HTTPException(status_code=500, detail="Google OAuth not configured")
+    """Sign in / register via Google OAuth (access token flow)."""
+    import httpx
 
     try:
-        idinfo = google_id_token.verify_oauth2_token(
-            body.credential,
-            google_requests.Request(),
-            GOOGLE_CLIENT_ID,
-        )
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=f"Invalid Google token: {exc}")
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(
+                "https://www.googleapis.com/oauth2/v3/userinfo",
+                headers={"Authorization": f"Bearer {body.access_token}"},
+                timeout=10,
+            )
+        if resp.status_code != 200:
+            raise HTTPException(status_code=400, detail="Invalid Google access token")
+        idinfo = resp.json()
+    except httpx.RequestError as exc:
+        raise HTTPException(status_code=500, detail=f"Google API error: {exc}")
 
     email = idinfo.get("email", "").lower().strip()
     name  = idinfo.get("name") or idinfo.get("given_name")
