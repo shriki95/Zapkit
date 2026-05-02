@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link2, ChevronDown, ChevronUp, Wand2, Settings2 } from 'lucide-react'
+// ChevronDown/Up used for optionsOpen toggle
 import type { ShortenRequest, ShortenResponse } from './types'
 import { incrementUsage } from '../../components/UsageModal'
 import AdModal from '../../components/AdModal'
@@ -20,7 +21,6 @@ export default function ShortenForm({ onResult, onRefreshLinks, onLoadingChange 
   const [alias, setAlias] = useState('')
   const [expiresAt, setExpiresAt] = useState('')
   const [optionsOpen, setOptionsOpen] = useState(false)
-  const [utmOpen, setUtmOpen] = useState(false)
   const [utm, setUtm] = useState({ source: '', medium: '', campaign: '', content: '', term: '' })
   const [loading, setLoading] = useState(false)
   const [loadingProgress, setLoadingProgress] = useState(0)
@@ -187,35 +187,27 @@ export default function ShortenForm({ onResult, onRefreshLinks, onLoadingChange 
               </div>
             </div>
 
-            {/* UTM Builder */}
+            {/* UTM Builder — always visible inside optional */}
             <div>
-              <button
-                type="button"
-                onClick={() => setUtmOpen(o => !o)}
-                className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-[#00C4A7] transition-colors"
-              >
+              <label className="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 mb-2">
                 <Wand2 size={13} />
                 UTM Parameters
                 <InfoTooltip text="Add UTM tags to track where your traffic comes from in Google Analytics (source, medium, campaign)." />
-                {utmOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-              </button>
-
-              {utmOpen && (
-                <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-2">
-                  {(['source', 'medium', 'campaign', 'content', 'term'] as const).map(key => (
-                    <div key={key}>
-                      <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1 capitalize">utm_{key}</label>
-                      <input
-                        type="text"
-                        value={utm[key]}
-                        onChange={e => setUtm(u => ({ ...u, [key]: e.target.value }))}
-                        placeholder={key === 'source' ? 'e.g. twitter' : key === 'medium' ? 'e.g. social' : ''}
-                        className="input-field text-xs py-2"
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                {(['source', 'medium', 'campaign', 'content', 'term'] as const).map(key => (
+                  <div key={key}>
+                    <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1 capitalize">utm_{key}</label>
+                    <input
+                      type="text"
+                      value={utm[key]}
+                      onChange={e => setUtm(u => ({ ...u, [key]: e.target.value }))}
+                      placeholder={key === 'source' ? 'e.g. twitter' : key === 'medium' ? 'e.g. social' : ''}
+                      className="input-field text-xs py-2"
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}

@@ -541,6 +541,61 @@ async def google_auth(
     )
 
 
+@app.post("/api/auth/google-credential", response_model=TokenResponse)
+async def google_credential_auth(
+    body: GoogleAuthRequest,
+    response: Response,
+    db: AsyncSession = Depends(get_db),
+):
+    """Sign in via Google ID token (credential) — used on mobile."""
+    import httpx
+
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(
+                f"https://oauth2.googleapis.com/tokeninfo?id_token={body.access_token}",
+                timeout=10,
+            )
+        if resp.status_code != 200:
+            raise HTTPException(status_code=400, detail="Invalid Google credential")
+        idinfo = resp.json()
+    except httpx.RequestError as exc:
+        raise HTTPException(status_code=500, detail=f"Google API error: {exc}")
+
+    email = idinfo.get("email", "").lower().strip()
+    name = idinfo.get("name") or idinfo.get("given_name")
+    if not email:
+        raise HTTPException(status_code=400, detail="Google account has no email")
+
+    result = await db.execute(select(User).where(User.email == email))
+    user = result.scalar_one_or_none()
+
+    if not user:
+        user = User(
+            id=str(uuid.uuid4()),
+            email=email,
+            name=name,
+            hashed_password="!oauth:google",
+            is_active=True,
+            email_verified=True,
+        )
+        db.add(user)
+        await db.commit()
+        await db.refresh(user)
+    else:
+        if not user.name and name:
+            user.name = name
+            await db.commit()
+            await db.refresh(user)
+
+    access_token = create_access_token(data={"sub": user.id})
+    _set_auth_cookies(response, access_token, user)
+    return TokenResponse(
+        access_token=access_token,
+        user=UserResponse.model_validate(user),
+    )
+
+
 @app.post("/api/auth/login", response_model=TokenResponse)
 async def login(
     body: UserLogin,

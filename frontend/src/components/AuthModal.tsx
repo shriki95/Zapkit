@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { X, Mail, Lock, User as UserIcon, AlertCircle, CheckCircle, Eye, EyeOff } from 'lucide-react'
 import InfoTooltip from './InfoTooltip'
-import { useGoogleLogin } from '@react-oauth/google'
+import { useGoogleLogin, GoogleLogin } from '@react-oauth/google'
 import { register, login, loginWithGoogle, requestPasswordReset, verifyPasswordReset, type RegisterData, type LoginData } from '../lib/auth'
 
 function GoogleButton({ mode, setLoading, setError, onSuccess, onClose }: {
@@ -11,7 +11,8 @@ function GoogleButton({ mode, setLoading, setError, onSuccess, onClose }: {
   onSuccess: () => void
   onClose: () => void
 }) {
-  const googleLogin = useGoogleLogin({
+  // useGoogleLogin for desktop popup
+  const googleLoginPopup = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       setLoading(true)
       setError('')
@@ -28,10 +29,42 @@ function GoogleButton({ mode, setLoading, setError, onSuccess, onClose }: {
     onError: () => setError('Google sign-in failed. Please try again.'),
   })
 
+  const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent)
+
+  // On mobile use GoogleLogin (credential/ID token flow — no redirect issues)
+  if (isMobile) {
+    return (
+      <div className="w-full [&>div]:w-full [&>div>div]:w-full [&_iframe]:w-full">
+        <GoogleLogin
+          onSuccess={async (res) => {
+            if (!res.credential) return
+            setLoading(true)
+            setError('')
+            try {
+              // For credential flow, send to a separate endpoint
+              const { loginWithGoogleCredential } = await import('../lib/auth')
+              await loginWithGoogleCredential(res.credential)
+              onSuccess()
+              onClose()
+            } catch (err: unknown) {
+              setError(err instanceof Error ? err.message : 'Google sign-in failed')
+            } finally {
+              setLoading(false)
+            }
+          }}
+          onError={() => setError('Google sign-in failed. Please try again.')}
+          text={mode === 'register' ? 'signup_with' : 'signin_with'}
+          width="400"
+          locale="en"
+        />
+      </div>
+    )
+  }
+
   return (
     <button
       type="button"
-      onClick={() => googleLogin()}
+      onClick={() => googleLoginPopup()}
       className="w-full flex items-center justify-center gap-3 py-2.5 px-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium text-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
     >
       <svg width="18" height="18" viewBox="0 0 48 48">
