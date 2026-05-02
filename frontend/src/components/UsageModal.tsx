@@ -3,8 +3,8 @@ import { Zap } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 const USAGE_KEY = 'tinylink-usage-count'
-const SHOWN_KEY = 'tinylink-modal-shown'
-const TRIGGER_COUNT = 5
+// Show ad every N uses
+const TRIGGER_EVERY = 3
 
 export function incrementUsage() {
   const count = parseInt(localStorage.getItem(USAGE_KEY) ?? '0', 10) + 1
@@ -14,16 +14,20 @@ export function incrementUsage() {
 
 export default function UsageModal() {
   const [open, setOpen] = useState(false)
-  const [countdown, setCountdown] = useState(5)
+  const [countdown, setCountdown] = useState(8)
 
   useEffect(() => {
     const count = parseInt(localStorage.getItem(USAGE_KEY) ?? '0', 10)
-    const shown = localStorage.getItem(SHOWN_KEY)
-    if (count >= TRIGGER_COUNT && !shown) {
+    if (count > 0 && count % TRIGGER_EVERY === 0) {
       setOpen(true)
-      localStorage.setItem(SHOWN_KEY, '1')
+      setCountdown(8)
     }
   }, [])
+
+  useEffect(() => {
+    if (!open) return
+    setCountdown(8)
+  }, [open])
 
   useEffect(() => {
     if (!open) return
@@ -52,7 +56,7 @@ export default function UsageModal() {
             </div>
             <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">You're a Power User!</h2>
             <p className="text-slate-600 dark:text-slate-400 text-sm mb-4">
-              You've created {TRIGGER_COUNT} links. TinyLink Pro stays free thanks to our sponsors.
+              TinyLink Pro stays free thanks to our sponsors. Just a moment...
             </p>
 
             {/* Ad placeholder */}

@@ -234,18 +234,6 @@ export default function TinyLinkPage() {
         </section>
       )}
 
-      {/* Horizontal ad banner - between hero and main content */}
-      {tab === 'shorten' && (
-        <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 py-2 px-4">
-          <div className="max-w-5xl mx-auto">
-            <div className="text-[10px] text-slate-400 text-center mb-1">Advertisement</div>
-            <div className="bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 min-h-[90px] flex items-center justify-center">
-              <div className="text-center text-slate-400 text-xs">Google Ad - 728x90 Leaderboard</div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Main content */}
       <main className="max-w-5xl mx-auto px-4 py-8">
         <AnimatePresence mode="wait">
@@ -312,19 +300,9 @@ export default function TinyLinkPage() {
         </AnimatePresence>
       </main>
 
-      {/* Pre-footer ad */}
-      {tab === 'shorten' && (
-        <div className="max-w-5xl mx-auto px-4 mb-4">
-          <div className="text-[10px] text-slate-400 text-center mb-1">Advertisement</div>
-          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 min-h-[90px] flex items-center justify-center">
-            <div className="text-center text-slate-400 text-xs">Google Ad - 728x90 Leaderboard</div>
-          </div>
-        </div>
-      )}
-
       {/* Footer */}
       {tab === 'shorten' && (
-        <footer className="border-t border-slate-200 dark:border-slate-800 mt-4 py-8 px-4">
+        <footer className="border-t border-slate-200 dark:border-slate-800 mt-12 py-8 px-4">
           <div className="max-w-5xl mx-auto">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
               <div className="flex items-center gap-2">

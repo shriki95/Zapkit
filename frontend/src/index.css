@@ -91,3 +91,18 @@
   }
   .overflow-x-hidden { overflow-x: hidden; }
 }
+
+/* ── Recharts: enable touch interaction on mobile ─────────────────────────── */
+.recharts-wrapper {
+  touch-action: none;
+}
+.recharts-surface {
+  touch-action: none;
+}
+/* QR canvas: always scale to container width on mobile */
+@media (max-width: 640px) {
+  .qr-result-canvas canvas {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+}

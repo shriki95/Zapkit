@@ -155,11 +155,13 @@ export default function QRGeneratorPage() {
           clearInterval(loadingInterval)
           const newCount = qrCount + 1
           setQrCount(newCount)
-          if (newCount % 2 === 0) {
+          if (newCount % 2 !== 0) {
+            // every odd generation: show result directly
+            setGeneratedPayload(finalPayload)
+          } else {
+            // every even generation: show ad first, then result
             setPendingQRPayload(finalPayload)
             setShowAdModal(true)
-          } else {
-            setGeneratedPayload(finalPayload)
           }
           // For non-link types or logged-out users: auto-save normally
           if (user && qrType !== 'link' && !savedPayloads.has(payload)) {
@@ -352,21 +354,9 @@ export default function QRGeneratorPage() {
       )}
 
       {/* Generate Tab */}
-      {/* Horizontal ad banner - between hero and main content */}
-      {appTab === 'generate' && (
-        <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 py-2 px-4">
-          <div className="max-w-6xl mx-auto">
-            <div className="text-[10px] text-slate-400 text-center mb-1">Advertisement</div>
-            <div className="bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 min-h-[90px] flex items-center justify-center">
-              <div className="text-center text-slate-400 text-xs">Google Ad - 728x90 Leaderboard</div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {appTab === 'generate' && (
         <main className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-[520px_1fr]" role="tabpanel">
-          <section className="space-y-4">
+          <section className={`space-y-4 ${generatedPayload ? 'order-2 lg:order-1' : 'order-1'}`}>
             <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
               <header className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 <span className="inline-flex h-6 w-6 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">1</span>
@@ -415,7 +405,7 @@ export default function QRGeneratorPage() {
             </article>
           </section>
 
-          <aside className="lg:sticky lg:top-6">
+          <aside className={`lg:sticky lg:top-6 ${generatedPayload ? 'order-1 lg:order-2' : 'order-2'}`}>
             <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
               <header className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 <span className="inline-flex h-6 w-6 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">4</span>
@@ -424,7 +414,7 @@ export default function QRGeneratorPage() {
 
               <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
                 {isGenerating ? (
-                  <div className="grid min-h-[360px] place-items-center">
+                  <div className="grid min-h-[180px] sm:min-h-[360px] place-items-center">
                     <div className="w-full max-w-xs text-center">
                       <div className="mx-auto mb-4 w-20 h-20 grid grid-cols-5 gap-0.5 p-1 rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-800">
                         {Array.from({ length: 25 }).map((_, i) => (
@@ -463,14 +453,14 @@ export default function QRGeneratorPage() {
                     </div>
                   </div>
                 ) : generatedPayload ? (
-                  <div className="mx-auto max-w-[380px]">
+                  <div className="mx-auto max-w-full sm:max-w-[380px]">
                     {/* Always render QR on white background — ensures scannability in dark mode */}
-                    <div className="mx-auto w-fit rounded-xl bg-white p-3 shadow-sm">
+                    <div className="mx-auto w-fit rounded-xl bg-white p-2 sm:p-3 shadow-sm overflow-hidden qr-result-canvas">
                       <QrPreview key={design.margin} data={generatedPayload} design={design} onReady={setQrInstance} />
                     </div>
                   </div>
                 ) : (
-                  <div className="grid min-h-[360px] place-items-center">
+                  <div className="grid min-h-[120px] sm:min-h-[360px] place-items-center">
                     <div className="max-w-xs text-center">
                       <div className="mx-auto mb-2 grid h-12 w-12 place-items-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
                         <QrCode className="h-6 w-6" />
@@ -536,15 +526,6 @@ export default function QRGeneratorPage() {
                 </div>
               )}
 
-              {/* Ad below QR result */}
-              {generatedPayload && (
-                <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-600 dark:bg-slate-800">
-                  <div className="text-xs text-slate-500 dark:text-slate-400 mb-2 text-center">Advertisement</div>
-                  <div className="bg-white dark:bg-slate-900 rounded border min-h-[160px] flex items-center justify-center">
-                    <div className="text-center text-slate-400 text-sm">Google Ad<br/>300x150</div>
-                  </div>
-                </div>
-              )}
             </section>
           </aside>
         </main>
@@ -681,7 +662,7 @@ export default function QRGeneratorPage() {
       )}
 
       {/* Ad Modal */}
-      <AdModal isOpen={showAdModal} onClose={handleAdClose} waitTime={5} />
+      <AdModal isOpen={showAdModal} onClose={handleAdClose} waitTime={8} />
 
       {/* SEO Optimizer */}
       <SEOOptimizer activeTab={appTab} />

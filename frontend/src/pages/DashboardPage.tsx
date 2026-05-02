@@ -568,11 +568,12 @@ export default function DashboardPage() {
                                       <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" strokeOpacity={0.5} />
                                       <XAxis dataKey="date" fontSize={11} tickLine={false} axisLine={false} interval="preserveStartEnd" />
                                       <YAxis allowDecimals={false} fontSize={11} tickLine={false} axisLine={false} />
-                                      <Tooltip contentStyle={{ borderRadius: 10, border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', fontFamily: 'Plus Jakarta Sans, sans-serif' }} />
+                                      <Tooltip contentStyle={{ borderRadius: 10, border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', fontFamily: 'Plus Jakarta Sans, sans-serif' }} wrapperStyle={{ zIndex: 50 }} allowEscapeViewBox={{ x: false, y: true }} />
                                       {selected.map((_, i) => (
                                         <Area key={i} type="monotone" dataKey={`v${i}`} name={selected[i].label}
                                           stroke={CHART_COLORS[i % CHART_COLORS.length]} strokeWidth={2.5}
-                                          fill={`url(#grad${i})`} />
+                                          fill={`url(#grad${i})`}
+                                          activeDot={{ r: 6, strokeWidth: 2, stroke: '#fff' }} />
                                       ))}
                                     </AreaChart>
                                   </ResponsiveContainer>
@@ -595,7 +596,7 @@ export default function DashboardPage() {
                                           <Pie data={deviceData} dataKey="value" nameKey="name" innerRadius={45} outerRadius={75} paddingAngle={3} strokeWidth={0}>
                                             {deviceData.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
                                           </Pie>
-                                          <Tooltip contentStyle={{ borderRadius: 10, border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }} />
+                                          <Tooltip contentStyle={{ borderRadius: 10, border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }} wrapperStyle={{ zIndex: 50 }} />
                                         </PieChart>
                                       </ResponsiveContainer>
                                       <div className="grid grid-cols-2 gap-2 mt-2">
@@ -624,7 +625,7 @@ export default function DashboardPage() {
                                         <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" strokeOpacity={0.4} />
                                         <XAxis type="number" allowDecimals={false} fontSize={11} tickLine={false} axisLine={false} />
                                         <YAxis type="category" dataKey="name" width={80} fontSize={11} tickLine={false} axisLine={false} />
-                                        <Tooltip contentStyle={{ borderRadius: 10, border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }} />
+                                        <Tooltip contentStyle={{ borderRadius: 10, border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }} wrapperStyle={{ zIndex: 50 }} allowEscapeViewBox={{ x: false, y: true }} />
                                         <Bar dataKey="value" fill="#f59e0b" radius={[0, 6, 6, 0]} />
                                       </BarChart>
                                     </ResponsiveContainer>
