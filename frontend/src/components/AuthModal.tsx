@@ -11,6 +11,7 @@ function GoogleButton({ mode, setLoading, setError, onSuccess, onClose }: {
   onClose: () => void
 }) {
   const googleLogin = useGoogleLogin({
+    ux_mode: 'popup',
     onSuccess: async (tokenResponse) => {
       setLoading(true)
       setError('')
