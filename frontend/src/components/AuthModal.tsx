@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { X, Mail, Lock, User as UserIcon, AlertCircle, CheckCircle, Eye, EyeOff } from 'lucide-react'
-import { useGoogleLogin, type TokenResponse } from '@react-oauth/google'
+import { useGoogleLogin } from '@react-oauth/google'
 import { register, login, loginWithGoogle, requestPasswordReset, verifyPasswordReset, type RegisterData, type LoginData } from '../lib/auth'
 
 function GoogleButton({ mode, setLoading, setError, onSuccess, onClose }: {
@@ -11,8 +11,8 @@ function GoogleButton({ mode, setLoading, setError, onSuccess, onClose }: {
   onClose: () => void
 }) {
   const googleLogin = useGoogleLogin({
-    ux_mode: 'popup',
-    onSuccess: async (tokenResponse: Omit<TokenResponse, 'error'>) => {
+    uxMode: 'popup',
+    onSuccess: async (tokenResponse) => {
       setLoading(true)
       setError('')
       try {
