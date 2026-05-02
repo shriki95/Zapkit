@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { X, Mail, Lock, User as UserIcon, AlertCircle, CheckCircle, Eye, EyeOff } from 'lucide-react'
-import { useGoogleLogin } from '@react-oauth/google'
+import { useGoogleLogin, type TokenResponse } from '@react-oauth/google'
 import { register, login, loginWithGoogle, requestPasswordReset, verifyPasswordReset, type RegisterData, type LoginData } from '../lib/auth'
 
 function GoogleButton({ mode, setLoading, setError, onSuccess, onClose }: {
@@ -12,7 +12,7 @@ function GoogleButton({ mode, setLoading, setError, onSuccess, onClose }: {
 }) {
   const googleLogin = useGoogleLogin({
     ux_mode: 'popup',
-    onSuccess: async (tokenResponse) => {
+    onSuccess: async (tokenResponse: Omit<TokenResponse, 'error'>) => {
       setLoading(true)
       setError('')
       try {
@@ -170,6 +170,14 @@ export default function AuthModal({ isOpen, onClose, onSuccess, mode: initialMod
                 <div className="text-2xl font-mono font-bold tracking-[0.3em] text-amber-800 dark:text-amber-300">{devCode}</div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Error message */}
+        {error && (
+          <div className="mb-4 flex items-center gap-2 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-3 text-sm text-red-700 dark:text-red-400">
+            <AlertCircle size={16} />
+            {error}
           </div>
         )}
 

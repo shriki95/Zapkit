@@ -145,7 +145,7 @@ export default function App() {
   }
 
   return (
-    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID ?? ''} onScriptLoadError={() => {}} auto_select={false}>
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID ?? ''}>
     <AuthContext.Provider value={{ user, setUser, showAuthModal, setShowAuthModal, authMode, setAuthMode, dark, setDark }}>
       <BrowserRouter>
         <ScrollToTop />
