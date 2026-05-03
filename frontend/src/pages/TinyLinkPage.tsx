@@ -184,7 +184,7 @@ export default function TinyLinkPage() {
       )}
 
       {/* Main content */}
-      <main className="max-w-5xl mx-auto px-4 py-8">
+      <main className="max-w-2xl mx-auto px-4 py-6">
         <AnimatePresence mode="wait">
           {true && (
             <motion.div key="shorten" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-5">
@@ -219,7 +219,7 @@ export default function TinyLinkPage() {
 
               {!result && !isShortening && (
                 <>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6">
                     {[
                       { icon: <Zap size={20} className="text-amber-500" />, label: 'Instant', desc: 'Links ready in milliseconds' },
                       { icon: <LayoutDashboard size={20} className="text-teal-500" />, label: 'Analytics', desc: 'Real-time click tracking' },

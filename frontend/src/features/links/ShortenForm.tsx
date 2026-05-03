@@ -13,16 +13,16 @@ const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 type LinkType = 'url' | 'call' | 'sms' | 'whatsapp' | 'email'
 
 const LINK_TYPES: Array<{ key: LinkType; label: string; icon: LucideIcon; description: string }> = [
-  { key: 'url',       label: 'URL',       icon: Globe,         description: 'Website link' },
-  { key: 'call',      label: 'Call',      icon: Phone,         description: 'Phone call' },
-  { key: 'sms',       label: 'SMS',       icon: MessageSquare, description: 'Text message' },
-  { key: 'whatsapp',  label: 'WhatsApp',  icon: MessageCircle, description: 'wa.me' },
-  { key: 'email',     label: 'Email',     icon: Mail,          description: 'mailto:' },
+  { key: 'url',      label: 'URL',      icon: Globe,         description: 'Website link' },
+  { key: 'call',     label: 'Call',     icon: Phone,         description: 'Phone call'   },
+  { key: 'sms',      label: 'SMS',      icon: MessageSquare, description: 'Text message' },
+  { key: 'whatsapp', label: 'WhatsApp', icon: MessageCircle, description: 'wa.me'        },
+  { key: 'email',    label: 'Email',    icon: Mail,          description: 'mailto:'      },
 ]
 
-function LinkTypeButton({
-  t, active, onClick,
-}: { t: typeof LINK_TYPES[number]; active: boolean; onClick: () => void }) {
+function LinkTypeButton({ t, active, onClick }: {
+  t: typeof LINK_TYPES[number]; active: boolean; onClick: () => void
+}) {
   const Icon = t.icon
   return (
     <button
@@ -149,7 +149,6 @@ export default function ShortenForm({ onResult, onRefreshLinks, onLoadingChange,
     }
 
     try {
-      // Build final URL with UTM if any
       let finalUrl = builtUrl
       if (linkType === 'url') {
         const utmParams = new URLSearchParams()
@@ -197,154 +196,173 @@ export default function ShortenForm({ onResult, onRefreshLinks, onLoadingChange,
   }
 
   return (
-    <form onSubmit={submit} className="card p-5 space-y-4">
+    <form onSubmit={submit} className="space-y-4">
 
-      {/* Link Type Selector */}
-      <LinkTypeSelector value={linkType} onChange={(k) => { setLinkType(k); setError('') }} />
+      {/* ── TYPE ── */}
+      <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+        <header className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          Type
+        </header>
+        <LinkTypeSelector value={linkType} onChange={(k) => { setLinkType(k); setError('') }} />
+      </article>
 
-      {/* Dynamic input based on type */}
-      {linkType === 'url' && (
-        <div className="flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 focus-within:ring-2 focus-within:ring-[#00C4A7] transition">
-          <div className="pl-4 shrink-0"><Link2 size={18} className="text-[#00C4A7]" /></div>
-          <input
-            type="text"
-            value={fields.url}
-            onChange={e => { f('url', e.target.value); setError('') }}
-            placeholder="Paste your long URL here…"
-            className="flex-1 py-3 pr-4 bg-transparent text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none text-base"
-            autoFocus
-          />
-        </div>
-      )}
+      {/* ── CONTENT ── */}
+      <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+        <header className="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          Content
+        </header>
 
-      {(linkType === 'call' || linkType === 'sms' || linkType === 'whatsapp') && (
-        <div className="space-y-2">
-          <input
-            type="tel"
-            value={fields.phone}
-            onChange={e => f('phone', e.target.value)}
-            placeholder={linkType === 'whatsapp' ? '+1 234 567 8900' : 'Phone number'}
-            className="input-field text-sm py-2.5"
-            autoFocus
-          />
-          {(linkType === 'sms' || linkType === 'whatsapp') && (
-            <textarea
-              value={fields.message}
-              onChange={e => f('message', e.target.value)}
-              placeholder="Pre-filled message (optional)"
-              rows={3}
-              className="input-field text-sm py-2 resize-none"
-            />
-          )}
-        </div>
-      )}
-
-      {linkType === 'email' && (
-        <div className="space-y-2">
-          <input
-            type="email"
-            value={fields.email}
-            onChange={e => f('email', e.target.value)}
-            placeholder="recipient@example.com"
-            className="input-field text-sm py-2.5"
-            autoFocus
-          />
-          <input
-            type="text"
-            value={fields.subject}
-            onChange={e => f('subject', e.target.value)}
-            placeholder="Subject (optional)"
-            className="input-field text-sm py-2"
-          />
-          <textarea
-            value={fields.body}
-            onChange={e => f('body', e.target.value)}
-            placeholder="Message body (optional)"
-            rows={3}
-            className="input-field text-sm py-2 resize-none"
-          />
-        </div>
-      )}
-
-      {/* Optional Settings */}
-      <div>
-        <button
-          type="button"
-          onClick={() => setOptionsOpen(o => !o)}
-          className="flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-[#00C4A7] transition-colors"
-        >
-          <Settings2 size={13} />
-          Optional settings
-          {optionsOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-        </button>
-
-        {optionsOpen && (
-          <div className="mt-3 space-y-3">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
-                  Custom Alias
-                  <InfoTooltip text="Choose a custom ending for your short URL. Leave blank for a random code." />
-                </label>
-                <div className="flex items-center gap-1">
-                  <span className="text-xs text-slate-400 shrink-0">zapkit.link/</span>
-                  <input
-                    type="text"
-                    value={alias}
-                    onChange={e => setAlias(e.target.value.replace(/[^a-z0-9-_]/gi, '').toLowerCase())}
-                    placeholder="my-link"
-                    className="input-field text-sm py-2"
-                  />
-                </div>
-              </div>
-              <div className="min-w-0">
-                <label className="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
-                  Expiry Date
-                  <InfoTooltip text="The link will stop working after this date. Leave blank for permanent." />
-                </label>
-                <input
-                  type="date"
-                  value={expiresAt}
-                  onChange={e => setExpiresAt(e.target.value)}
-                  min={new Date().toISOString().split('T')[0]}
-                  className="input-field text-sm py-2 w-full max-w-full"
-                  style={{ minWidth: 0 }}
-                />
-              </div>
+        <div className="space-y-3">
+          {/* Dynamic fields */}
+          {linkType === 'url' && (
+            <div className="flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 focus-within:ring-2 focus-within:ring-[#00C4A7] transition">
+              <div className="pl-4 shrink-0"><Link2 size={18} className="text-[#00C4A7]" /></div>
+              <input
+                type="text"
+                value={fields.url}
+                onChange={e => { f('url', e.target.value); setError('') }}
+                placeholder="Paste your long URL here…"
+                className="flex-1 py-3 pr-4 bg-transparent text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none text-sm"
+                autoFocus
+              />
             </div>
+          )}
 
-            {/* UTM only for URL type */}
-            {linkType === 'url' && (
-              <div>
-                <label className="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 mb-2">
-                  <Wand2 size={13} />
-                  UTM Parameters
-                  <InfoTooltip text="Add UTM tags to track traffic in Google Analytics." />
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                  {(['source', 'medium', 'campaign', 'content', 'term'] as const).map(key => (
-                    <div key={key}>
-                      <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1 capitalize">utm_{key}</label>
+          {(linkType === 'call' || linkType === 'sms' || linkType === 'whatsapp') && (
+            <div className="space-y-2">
+              <input
+                type="tel"
+                value={fields.phone}
+                onChange={e => f('phone', e.target.value)}
+                placeholder={linkType === 'whatsapp' ? '+1 234 567 8900' : 'Phone number'}
+                className="input-field text-sm py-2.5"
+                autoFocus
+              />
+              {(linkType === 'sms' || linkType === 'whatsapp') && (
+                <textarea
+                  value={fields.message}
+                  onChange={e => f('message', e.target.value)}
+                  placeholder="Pre-filled message (optional)"
+                  rows={3}
+                  className="input-field text-sm py-2 resize-none"
+                />
+              )}
+            </div>
+          )}
+
+          {linkType === 'email' && (
+            <div className="space-y-2">
+              <input
+                type="email"
+                value={fields.email}
+                onChange={e => f('email', e.target.value)}
+                placeholder="recipient@example.com"
+                className="input-field text-sm py-2.5"
+                autoFocus
+              />
+              <input
+                type="text"
+                value={fields.subject}
+                onChange={e => f('subject', e.target.value)}
+                placeholder="Subject (optional)"
+                className="input-field text-sm py-2"
+              />
+              <textarea
+                value={fields.body}
+                onChange={e => f('body', e.target.value)}
+                placeholder="Message body (optional)"
+                rows={3}
+                className="input-field text-sm py-2 resize-none"
+              />
+            </div>
+          )}
+
+          {/* Optional Settings */}
+          <div>
+            <button
+              type="button"
+              onClick={() => setOptionsOpen(o => !o)}
+              className="flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-[#00C4A7] transition-colors"
+            >
+              <Settings2 size={13} />
+              Optional settings
+              {optionsOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+            </button>
+
+            {optionsOpen && (
+              <div className="mt-3 space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* Custom Alias */}
+                  <div>
+                    <label className="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                      Custom Alias
+                      <InfoTooltip text="Choose a custom ending for your short URL. Leave blank for a random code." />
+                    </label>
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs text-slate-400 shrink-0">zapkit.link/</span>
                       <input
                         type="text"
-                        value={utm[key]}
-                        onChange={e => setUtm(u => ({ ...u, [key]: e.target.value }))}
-                        placeholder={key === 'source' ? 'e.g. twitter' : key === 'medium' ? 'e.g. social' : ''}
-                        className="input-field text-xs py-2"
+                        value={alias}
+                        onChange={e => setAlias(e.target.value.replace(/[^a-z0-9-_]/gi, '').toLowerCase())}
+                        placeholder="my-link"
+                        className="input-field text-sm py-2"
                       />
                     </div>
-                  ))}
+                  </div>
+
+                  {/* Expiry Date — available for all types */}
+                  <div className="min-w-0">
+                    <label className="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                      Expiry Date
+                      <InfoTooltip text="The link will stop working after this date. Leave blank for permanent." />
+                    </label>
+                    <input
+                      type="date"
+                      value={expiresAt}
+                      onChange={e => setExpiresAt(e.target.value)}
+                      min={new Date().toISOString().split('T')[0]}
+                      className="input-field text-sm py-2 w-full max-w-full"
+                      style={{ minWidth: 0 }}
+                    />
+                  </div>
                 </div>
+
+                {/* UTM — only for URL type */}
+                {linkType === 'url' && (
+                  <div>
+                    <label className="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 mb-2">
+                      <Wand2 size={13} />
+                      UTM Parameters
+                      <InfoTooltip text="Add UTM tags to track traffic in Google Analytics." />
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      {(['source', 'medium', 'campaign', 'content', 'term'] as const).map(key => (
+                        <div key={key}>
+                          <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1 capitalize">utm_{key}</label>
+                          <input
+                            type="text"
+                            value={utm[key]}
+                            onChange={e => setUtm(u => ({ ...u, [key]: e.target.value }))}
+                            placeholder={key === 'source' ? 'e.g. twitter' : key === 'medium' ? 'e.g. social' : ''}
+                            className="input-field text-xs py-2"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
-        )}
-      </div>
+        </div>
+      </article>
 
-      {error && <p className="text-sm text-red-500 dark:text-red-400">{error}</p>}
+      {/* ── ERROR ── */}
+      {error && <p className="text-sm text-red-500 dark:text-red-400 px-1">{error}</p>}
 
+      {/* ── PROGRESS ── */}
       {loading && (
-        <div className="space-y-3">
+        <div className="space-y-2 px-1">
           <div className="text-center">
             <div className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-1">
               {loadingProgress < 30 && 'Validating…'}
@@ -360,6 +378,7 @@ export default function ShortenForm({ onResult, onRefreshLinks, onLoadingChange,
         </div>
       )}
 
+      {/* ── SUBMIT / SIGNUP ── */}
       {isLoggedIn ? (
         <button type="submit" disabled={loading} className="btn-primary w-full flex items-center justify-center gap-2 text-base py-3">
           {loading ? (
