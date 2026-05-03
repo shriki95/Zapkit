@@ -42,6 +42,8 @@ from schemas import (
     DashboardResponse,
     DashboardLinkItem,
     DashboardQRItem,
+    UpdateLinkRequest,
+    UpdateQRRequest,
 )
 from shortener import generate_short_code
 from auth import (
@@ -1186,6 +1188,44 @@ async def get_dashboard_qr_analytics(
 
     scans_result = await db.execute(select(QRScan).where(QRScan.qr_id == qr.id))
     return _stats_from_qr_scans(list(scans_result.scalars().all()))
+
+
+@app.patch("/api/dashboard/links/{short_code}")
+async def update_dashboard_link(
+    short_code: str,
+    body: UpdateLinkRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Re-route a short link to a new destination URL."""
+    result = await db.execute(
+        select(Link).where(Link.short_code == short_code, Link.user_id == current_user.id)
+    )
+    link = result.scalar_one_or_none()
+    if not link:
+        raise HTTPException(status_code=404, detail="Link not found")
+    link.original_url = body.new_url
+    await db.commit()
+    return {"ok": True, "new_url": body.new_url}
+
+
+@app.patch("/api/dashboard/qr/{qr_code}")
+async def update_dashboard_qr(
+    qr_code: str,
+    body: UpdateQRRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Re-route a QR code to new content (works because QR encodes /q/{code} redirect)."""
+    result = await db.execute(
+        select(QRCode).where(QRCode.qr_code == qr_code, QRCode.user_id == current_user.id)
+    )
+    qr = result.scalar_one_or_none()
+    if not qr:
+        raise HTTPException(status_code=404, detail="QR code not found")
+    qr.content = body.new_content
+    await db.commit()
+    return {"ok": True, "new_content": body.new_content}
 
 
 @app.delete("/api/dashboard/links/{short_code}")

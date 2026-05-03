@@ -78,6 +78,24 @@ class GoogleCredentialRequest(BaseModel):
     credential: str  # Google ID token (from GoogleLogin component)
 
 
+# ── Re-route / Update schemas ────────────────────────────────────────────────
+
+class UpdateLinkRequest(BaseModel):
+    new_url: str
+
+    @field_validator("new_url")
+    @classmethod
+    def validate_url(cls, v: str) -> str:
+        v = v.strip()
+        if not v.startswith(("http://", "https://")):
+            v = "https://" + v
+        return v
+
+
+class UpdateQRRequest(BaseModel):
+    new_content: str
+
+
 # ── User Authentication Schemas ──────────────────────────────────────────────
 
 class UserRegister(BaseModel):

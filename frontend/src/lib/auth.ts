@@ -275,6 +275,22 @@ export async function createQR(qrType: string, content: string): Promise<{ qr_co
   return res.json()
 }
 
+export async function updateLink(shortCode: string, newUrl: string): Promise<void> {
+  const res = await apiFetch(`/api/dashboard/links/${shortCode}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ new_url: newUrl }),
+  })
+  if (!res.ok) throw new Error(await parseApiError(res, 'Failed to update link'))
+}
+
+export async function updateQR(qrCode: string, newContent: string): Promise<void> {
+  const res = await apiFetch(`/api/dashboard/qr/${qrCode}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ new_content: newContent }),
+  })
+  if (!res.ok) throw new Error(await parseApiError(res, 'Failed to update QR'))
+}
+
 export async function deleteLink(shortCode: string): Promise<void> {
   const res = await apiFetch(`/api/dashboard/links/${shortCode}`, { method: 'DELETE' })
   if (!res.ok) throw new Error(await parseApiError(res, 'Failed to delete link'))

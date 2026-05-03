@@ -163,15 +163,14 @@ export default function TinyLinkPage() {
               Trusted by thousands worldwide
             </div>
             <h1 className="text-4xl sm:text-5xl font-extrabold text-white mb-4 tracking-tight">
-              {user ? 'Your Link Dashboard' : 'Shorten. Track. Grow.'}
+              Infinite control over every link
             </h1>
             <p className="text-slate-300 text-lg max-w-2xl mx-auto leading-relaxed">
-              {user
-                ? 'Create short links, track real-time analytics, and manage everything from your dashboard.'
-                : 'Create a free account and turn long URLs into smart, trackable links in seconds. No credit card required.'}
+              Shorten, brand, track and re-route your links — even after they're live.
+              Granular analytics per click: device, country, referrer, time.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-6 mt-8 text-sm text-slate-400">
-              {['Instant Generation', 'Real-time Analytics', 'Secure & Private'].map(f => (
+              {['Instant Short Links', 'Granular Click Analytics', 'Re-route Anytime', 'QR + Link in One'].map(f => (
                 <div key={f} className="flex items-center gap-2">
                   <svg className="w-5 h-5 text-[#00C4A7]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />

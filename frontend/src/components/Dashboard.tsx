@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
-import { BarChart3, Calendar, Eye, Link2, QrCode, TrendingUp } from 'lucide-react'
+import { BarChart3, Calendar, Check, Edit2, Eye, Link2, QrCode, TrendingUp, X } from 'lucide-react'
 import {
   Area,
   AreaChart,
@@ -15,7 +15,25 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import { getDashboard, getLinkStats, getQRStats, type LinkStats, type QRStats } from '../lib/auth'
+import { getDashboard, getLinkStats, getQRStats, updateLink, updateQR, type LinkStats, type QRStats } from '../lib/auth'
+import QRCodeStylingLib from 'qr-code-styling'
+
+// ── Mini QR renderer ─────────────────────────────────────────────────────────
+function MiniQR({ data, size = 120 }: { data: string; size?: number }) {
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!ref.current || !data) return
+    ref.current.innerHTML = ''
+    const qr = new QRCodeStylingLib({
+      width: size, height: size, data,
+      dotsOptions: { color: '#1e293b', type: 'rounded' },
+      backgroundOptions: { color: '#ffffff' },
+      qrOptions: { errorCorrectionLevel: 'M' },
+    })
+    qr.append(ref.current)
+  }, [data, size])
+  return <div ref={ref} className="rounded-lg overflow-hidden bg-white p-1 shadow-sm" />
+}
 
 interface DashboardData {
   links: Array<{
@@ -54,6 +72,10 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [analyticsLoading, setAnalyticsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [editingCode, setEditingCode] = useState<string | null>(null)
+  const [editValue, setEditValue] = useState('')
+  const [editSaving, setEditSaving] = useState(false)
+  const [viewingQR, setViewingQR] = useState<{ content: string; label: string } | null>(null)
 
   useEffect(() => {
     loadDashboard()
@@ -74,6 +96,34 @@ export default function Dashboard() {
     if (!selected) return
     loadAnalytics(selected)
   }, [selected])
+
+  const saveEdit = async (type: 'link' | 'qr', code: string) => {
+    if (!editValue.trim()) return
+    setEditSaving(true)
+    try {
+      if (type === 'link') {
+        await updateLink(code, editValue.trim())
+        setData(d => d ? {
+          ...d,
+          links: d.links.map(l => l.short_code === code ? { ...l, original_url: editValue.trim() } : l)
+        } : d)
+        if (selected?.type === 'link' && selected.code === code) {
+          setSelected(s => s ? { ...s, subtitle: editValue.trim() } : s)
+        }
+      } else {
+        await updateQR(code, editValue.trim())
+        setData(d => d ? {
+          ...d,
+          qr_codes: d.qr_codes.map(q => q.qr_code === code ? { ...q, content: editValue.trim() } : q)
+        } : d)
+      }
+      setEditingCode(null)
+    } catch (e: any) {
+      setError(e.message)
+    } finally {
+      setEditSaving(false)
+    }
+  }
 
   const loadDashboard = async () => {
     try {
@@ -152,6 +202,29 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
+      {/* QR Viewer Modal */}
+      {viewingQR && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          onClick={() => setViewingQR(null)}
+        >
+          <div
+            className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-6 max-w-xs w-full text-center"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <span className="font-bold text-slate-900 dark:text-white">{viewingQR.label}</span>
+              <button onClick={() => setViewingQR(null)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="flex justify-center mb-3">
+              <MiniQR data={viewingQR.content} size={200} />
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 break-all">{viewingQR.content}</p>
+          </div>
+        </div>
+      )}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <StatCard icon={Link2} label="Links" value={data.total_links} />
         <StatCard icon={QrCode} label="QR Codes" value={data.total_qr_codes} />
@@ -171,25 +244,58 @@ export default function Dashboard() {
               <div className="space-y-2">
                 <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">Links</div>
                 {data.links.map(link => (
-                  <button
+                  <div
                     key={link.id}
-                    onClick={() => setSelected({ type: 'link', code: link.short_code, label: link.short_code, subtitle: link.original_url })}
-                    className={`w-full text-left p-3 rounded-lg border transition-colors ${
+                    className={`rounded-lg border transition-colors ${
                       selected?.type === 'link' && selected.code === link.short_code
                         ? 'border-[#00C4A7] bg-[#00C4A7]/10'
-                        : 'border-slate-200 dark:border-slate-700 hover:border-[#00C4A7]'
+                        : 'border-slate-200 dark:border-slate-700'
                     }`}
                   >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="font-mono font-semibold text-[#00C4A7]">{link.short_code}</span>
-                      <span className="text-xs text-slate-500">{link.click_count} clicks</span>
-                    </div>
-                    <p className="mt-1 truncate text-xs text-slate-600 dark:text-slate-400">{link.original_url}</p>
-                    <div className="mt-2 flex items-center gap-1 text-xs text-slate-500">
-                      <Calendar size={12} />
-                      {formatDate(link.created_at)}
-                    </div>
-                  </button>
+                    <button
+                      onClick={() => setSelected({ type: 'link', code: link.short_code, label: link.short_code, subtitle: link.original_url })}
+                      className="w-full text-left p-3"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-mono font-semibold text-[#00C4A7]">{link.short_code}</span>
+                        <span className="text-xs text-slate-500">{link.click_count} clicks</span>
+                      </div>
+                      {editingCode === link.short_code ? (
+                        <div className="mt-2 flex gap-1" onClick={e => e.stopPropagation()}>
+                          <input
+                            autoFocus
+                            value={editValue}
+                            onChange={e => setEditValue(e.target.value)}
+                            onKeyDown={e => { if (e.key === 'Enter') saveEdit('link', link.short_code); if (e.key === 'Escape') setEditingCode(null) }}
+                            className="flex-1 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 text-xs text-slate-900 dark:text-slate-100 outline-none focus:ring-1 focus:ring-[#00C4A7]"
+                            placeholder="New destination URL"
+                          />
+                          <button onClick={() => saveEdit('link', link.short_code)} disabled={editSaving} className="rounded bg-[#00C4A7] px-2 py-1 text-white hover:bg-[#00B096] transition-colors">
+                            <Check size={12} />
+                          </button>
+                          <button onClick={() => setEditingCode(null)} className="rounded border border-slate-300 dark:border-slate-600 px-2 py-1 text-slate-500 hover:text-slate-700 transition-colors">
+                            <X size={12} />
+                          </button>
+                        </div>
+                      ) : (
+                        <p className="mt-1 truncate text-xs text-slate-600 dark:text-slate-400">{link.original_url}</p>
+                      )}
+                      <div className="mt-2 flex items-center justify-between gap-1">
+                        <div className="flex items-center gap-1 text-xs text-slate-500">
+                          <Calendar size={12} />
+                          {formatDate(link.created_at)}
+                        </div>
+                        {editingCode !== link.short_code && (
+                          <button
+                            onClick={e => { e.stopPropagation(); setEditingCode(link.short_code); setEditValue(link.original_url) }}
+                            className="flex items-center gap-1 text-xs text-slate-400 hover:text-[#00C4A7] transition-colors"
+                          >
+                            <Edit2 size={11} /> Re-route
+                          </button>
+                        )}
+                      </div>
+                    </button>
+                  </div>
                 ))}
               </div>
             )}
@@ -198,25 +304,65 @@ export default function Dashboard() {
               <div className="space-y-2">
                 <div className="text-xs font-semibold text-slate-500 dark:text-slate-400">QR Codes</div>
                 {data.qr_codes.map(qr => (
-                  <button
+                  <div
                     key={qr.id}
-                    onClick={() => setSelected({ type: 'qr', code: qr.qr_code, label: getQRTypeLabel(qr.qr_type), subtitle: qr.qr_code })}
-                    className={`w-full text-left p-3 rounded-lg border transition-colors ${
+                    className={`rounded-lg border transition-colors ${
                       selected?.type === 'qr' && selected.code === qr.qr_code
                         ? 'border-[#00C4A7] bg-[#00C4A7]/10'
-                        : 'border-slate-200 dark:border-slate-700 hover:border-[#00C4A7]'
+                        : 'border-slate-200 dark:border-slate-700'
                     }`}
                   >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="font-semibold text-slate-900 dark:text-white">{getQRTypeLabel(qr.qr_type)}</span>
-                      <span className="text-xs text-slate-500">{qr.scan_count} scans</span>
-                    </div>
-                    <p className="mt-1 font-mono text-xs text-slate-600 dark:text-slate-400">{qr.qr_code}</p>
-                    <div className="mt-2 flex items-center gap-1 text-xs text-slate-500">
-                      <Calendar size={12} />
-                      {formatDate(qr.created_at)}
-                    </div>
-                  </button>
+                    <button
+                      onClick={() => setSelected({ type: 'qr', code: qr.qr_code, label: getQRTypeLabel(qr.qr_type), subtitle: qr.qr_code })}
+                      className="w-full text-left p-3"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-semibold text-slate-900 dark:text-white">{getQRTypeLabel(qr.qr_type)}</span>
+                        <span className="text-xs text-slate-500">{qr.scan_count} scans</span>
+                      </div>
+                      <p className="mt-1 font-mono text-xs text-slate-600 dark:text-slate-400 truncate">{qr.content || qr.qr_code}</p>
+                      {editingCode === qr.qr_code && (
+                        <div className="mt-2 flex gap-1" onClick={e => e.stopPropagation()}>
+                          <input
+                            autoFocus
+                            value={editValue}
+                            onChange={e => setEditValue(e.target.value)}
+                            onKeyDown={e => { if (e.key === 'Enter') saveEdit('qr', qr.qr_code); if (e.key === 'Escape') setEditingCode(null) }}
+                            className="flex-1 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 text-xs text-slate-900 dark:text-slate-100 outline-none focus:ring-1 focus:ring-[#00C4A7]"
+                            placeholder="New destination"
+                          />
+                          <button onClick={() => saveEdit('qr', qr.qr_code)} disabled={editSaving} className="rounded bg-[#00C4A7] px-2 py-1 text-white hover:bg-[#00B096] transition-colors">
+                            <Check size={12} />
+                          </button>
+                          <button onClick={() => setEditingCode(null)} className="rounded border border-slate-300 dark:border-slate-600 px-2 py-1 text-slate-500 hover:text-slate-700 transition-colors">
+                            <X size={12} />
+                          </button>
+                        </div>
+                      )}
+                      <div className="mt-2 flex items-center justify-between gap-1">
+                        <div className="flex items-center gap-1 text-xs text-slate-500">
+                          <Calendar size={12} />
+                          {formatDate(qr.created_at)}
+                        </div>
+                        <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
+                          <button
+                            onClick={() => setViewingQR({ content: qr.content || qr.qr_code, label: getQRTypeLabel(qr.qr_type) })}
+                            className="flex items-center gap-1 text-xs text-slate-400 hover:text-[#00C4A7] transition-colors"
+                          >
+                            <QrCode size={11} /> View
+                          </button>
+                          {editingCode !== qr.qr_code && (
+                            <button
+                              onClick={() => { setEditingCode(qr.qr_code); setEditValue(qr.content || '') }}
+                              className="flex items-center gap-1 text-xs text-slate-400 hover:text-[#00C4A7] transition-colors"
+                            >
+                              <Edit2 size={11} /> Re-route
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                  </div>
                 ))}
               </div>
             )}
