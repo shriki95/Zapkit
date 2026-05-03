@@ -13,13 +13,17 @@ import {
   QrCode, RefreshCw, TrendingUp, Eye, Zap,
   LogIn, LogOut, Moon, Sun, Trash2, Settings as SettingsIcon,
   LayoutDashboard, CheckSquare, Square, Copy, Check, Download,
-  Edit2, X,
+  Edit2, X, Wand2, ChevronDown, ChevronUp,
 } from 'lucide-react'
 import {
   getDashboard, getLinkStats, getQRStats, logout,
   deleteLink, deleteQR, updateLink, updateQR,
   type LinkStats, type QRStats,
 } from '../lib/auth'
+import { buildQrPayload } from '../features/qr/payload'
+import { QrTypeSelector } from '../features/qr/QrTypeSelector'
+import { ContentForm } from '../features/qr/steps/ContentForm'
+import type { QrContentState, QrType } from '../features/qr/types'
 import QRCodeStylingLib from 'qr-code-styling'
 
 // ── Mini QR renderer ──────────────────────────────────────────────────────────
@@ -97,10 +101,12 @@ export default function DashboardPage() {
   const [deleting, setDeleting] = useState(false)
   const [copiedCode, setCopiedCode] = useState<string | null>(null)
   const [downloadingQR, setDownloadingQR] = useState<string | null>(null)
-  const [editingCode, setEditingCode] = useState<string | null>(null)
-  const [editValue, setEditValue] = useState('')
-  const [editSaving, setEditSaving] = useState(false)
   const [viewingQR, setViewingQR] = useState<{ content: string; label: string } | null>(null)
+  const [rerouteTarget, setRerouteTarget] = useState<
+    | { kind: 'link'; code: string; currentUrl: string }
+    | { kind: 'qr'; code: string; currentType: string; currentContent: string }
+    | null
+  >(null)
 
   useEffect(() => { if (!user) navigate('/') }, [user, navigate])
   useEffect(() => { loadDashboard() }, [])
@@ -160,20 +166,22 @@ export default function DashboardPage() {
 
   const handleLogout = () => { logout(); setUser(null) }
 
-  async function saveEdit(type: 'link' | 'qr', code: string) {
-    if (!editValue.trim()) return
-    setEditSaving(true)
-    try {
-      if (type === 'link') {
-        await updateLink(code, editValue.trim())
-        setData(d => d ? { ...d, links: d.links.map(l => l.short_code === code ? { ...l, original_url: editValue.trim() } : l) } : d)
-      } else {
-        await updateQR(code, editValue.trim())
-        setData(d => d ? { ...d, qr_codes: d.qr_codes.map(q => q.qr_code === code ? { ...q, content: editValue.trim() } : q) } : d)
-      }
-      setEditingCode(null)
-    } catch (e: any) { setError(e.message) }
-    finally { setEditSaving(false) }
+  async function applyRerouteLink(code: string, newUrl: string, utm: Record<string, string>, expiresAt: string) {
+    let finalUrl = newUrl.trim()
+    if (!finalUrl.startsWith('http')) finalUrl = 'https://' + finalUrl
+    const params = new URLSearchParams()
+    Object.entries(utm).forEach(([k, v]) => { if (v) params.set(`utm_${k}`, v) })
+    const query = params.toString()
+    if (query) finalUrl += (finalUrl.includes('?') ? '&' : '?') + query
+    await updateLink(code, finalUrl)
+    setData(d => d ? { ...d, links: d.links.map(l => l.short_code === code ? { ...l, original_url: finalUrl, ...(expiresAt ? { expires_at: expiresAt } : {}) } : l) } : d)
+    setRerouteTarget(null)
+  }
+
+  async function applyRerouteQR(code: string, newContent: string, newType: string) {
+    await updateQR(code, newContent, newType)
+    setData(d => d ? { ...d, qr_codes: d.qr_codes.map(q => q.qr_code === code ? { ...q, content: newContent, qr_type: newType } : q) } : d)
+    setRerouteTarget(null)
   }
 
   function handleCopy(text: string, code: string) {
@@ -252,6 +260,24 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
+
+      {/* ── Re-route Modal ─────────────────────────────────────────────────── */}
+      {rerouteTarget && (
+        rerouteTarget.kind === 'link'
+          ? <LinkRerouteModal
+              code={rerouteTarget.code}
+              currentUrl={rerouteTarget.currentUrl}
+              onSave={(url, utm, exp) => applyRerouteLink(rerouteTarget.code, url, utm, exp)}
+              onClose={() => setRerouteTarget(null)}
+            />
+          : <QRRerouteModal
+              code={rerouteTarget.code}
+              currentType={rerouteTarget.currentType as QrType}
+              currentContent={rerouteTarget.currentContent}
+              onSave={(content, type) => applyRerouteQR(rerouteTarget.code, content, type)}
+              onClose={() => setRerouteTarget(null)}
+            />
+      )}
 
       {/* ── QR Preview Modal ───────────────────────────────────────────────── */}
       {viewingQR && (
@@ -463,20 +489,6 @@ export default function DashboardPage() {
                                       </span>
                                     </div>
                                     <p className="text-xs text-slate-500 dark:text-slate-400 truncate mb-2 pl-5">{shortUrl(link.original_url)}</p>
-                                    {editingCode === link.short_code && (
-                                      <div className="flex gap-1 mb-2 pl-5" onClick={e => e.stopPropagation()}>
-                                        <input
-                                          autoFocus
-                                          value={editValue}
-                                          onChange={e => setEditValue(e.target.value)}
-                                          onKeyDown={e => { if (e.key === 'Enter') saveEdit('link', link.short_code); if (e.key === 'Escape') setEditingCode(null) }}
-                                          className="flex-1 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 text-xs text-slate-900 dark:text-slate-100 outline-none focus:ring-1 focus:ring-[#00C4A7]"
-                                          placeholder="New destination URL…"
-                                        />
-                                        <button onClick={() => saveEdit('link', link.short_code)} disabled={editSaving} className="rounded-lg bg-[#00C4A7] px-2 py-1 text-white text-xs hover:bg-[#00B096] transition-colors"><Check size={11} /></button>
-                                        <button onClick={() => setEditingCode(null)} className="rounded-lg border border-slate-200 dark:border-slate-700 px-2 py-1 text-xs text-slate-500 hover:text-slate-700 transition-colors"><X size={11} /></button>
-                                      </div>
-                                    )}
                                     <div className="flex items-center gap-3 text-[10px] text-slate-400 pl-5 flex-wrap">
                                       <span className="flex items-center gap-1"><Calendar size={10} /> {fmt(link.created_at)}</span>
                                       <a href={link.short_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-[#00C4A7] transition-colors" onClick={e => e.stopPropagation()}>
@@ -489,8 +501,8 @@ export default function DashboardPage() {
                                         {copiedCode === link.short_code ? <><Check size={10} /> Copied!</> : <><Copy size={10} /> Copy link</>}
                                       </button>
                                       <button
-                                        onClick={e => { e.stopPropagation(); setEditingCode(link.short_code); setEditValue(link.original_url) }}
-                                        className="flex items-center gap-1 hover:text-[#00C4A7] transition-colors"
+                                        onClick={e => { e.stopPropagation(); setRerouteTarget({ kind: 'link', code: link.short_code, currentUrl: link.original_url }) }}
+                                        className="flex items-center gap-1 hover:text-[#00C4A7] transition-colors font-medium"
                                       >
                                         <Edit2 size={10} /> Re-route
                                       </button>
@@ -540,20 +552,6 @@ export default function DashboardPage() {
                                       </span>
                                     </div>
                                     <p className="font-mono text-xs text-slate-500 dark:text-slate-400 mb-2 pl-5 truncate">{qr.content}</p>
-                                    {editingCode === qr.qr_code && (
-                                      <div className="flex gap-1 mb-2 pl-5" onClick={e => e.stopPropagation()}>
-                                        <input
-                                          autoFocus
-                                          value={editValue}
-                                          onChange={e => setEditValue(e.target.value)}
-                                          onKeyDown={e => { if (e.key === 'Enter') saveEdit('qr', qr.qr_code); if (e.key === 'Escape') setEditingCode(null) }}
-                                          className="flex-1 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 text-xs text-slate-900 dark:text-slate-100 outline-none focus:ring-1 focus:ring-[#00C4A7]"
-                                          placeholder="New destination…"
-                                        />
-                                        <button onClick={() => saveEdit('qr', qr.qr_code)} disabled={editSaving} className="rounded-lg bg-[#00C4A7] px-2 py-1 text-white text-xs hover:bg-[#00B096] transition-colors"><Check size={11} /></button>
-                                        <button onClick={() => setEditingCode(null)} className="rounded-lg border border-slate-200 dark:border-slate-700 px-2 py-1 text-xs text-slate-500 hover:text-slate-700 transition-colors"><X size={11} /></button>
-                                      </div>
-                                    )}
                                     <div className="text-[10px] text-slate-400 flex items-center gap-3 pl-5 flex-wrap">
                                       <span className="flex items-center gap-1"><Calendar size={10} /> {fmt(qr.created_at)}</span>
                                       <button
@@ -579,8 +577,8 @@ export default function DashboardPage() {
                                         <Download size={10} /> {downloadingQR === qr.qr_code ? 'Saving…' : 'Download'}
                                       </button>
                                       <button
-                                        onClick={e => { e.stopPropagation(); setEditingCode(qr.qr_code); setEditValue(qr.content) }}
-                                        className="flex items-center gap-1 hover:text-[#00C4A7] transition-colors"
+                                        onClick={e => { e.stopPropagation(); setRerouteTarget({ kind: 'qr', code: qr.qr_code, currentType: qr.qr_type, currentContent: qr.content }) }}
+                                        className="flex items-center gap-1 hover:text-[#00C4A7] transition-colors font-medium"
                                       >
                                         <Edit2 size={10} /> Re-route
                                       </button>
@@ -815,6 +813,177 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+// ── Link Re-route Modal ───────────────────────────────────────────────────────
+function LinkRerouteModal({ code, currentUrl, onSave, onClose }: {
+  code: string
+  currentUrl: string
+  onSave: (url: string, utm: Record<string, string>, expiresAt: string) => Promise<void>
+  onClose: () => void
+}) {
+  const [url, setUrl] = useState(currentUrl)
+  const [expiresAt, setExpiresAt] = useState('')
+  const [utm, setUtm] = useState({ source: '', medium: '', campaign: '', content: '', term: '' })
+  const [showUtm, setShowUtm] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  async function handleSave() {
+    if (!url.trim()) { setError('Please enter a URL'); return }
+    setSaving(true)
+    setError('')
+    try { await onSave(url, utm, expiresAt) }
+    catch (e: any) { setError(e.message); setSaving(false) }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={onClose}>
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800">
+          <div>
+            <h2 className="font-bold text-slate-900 dark:text-white">Re-route link</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">The short link <span className="font-mono text-[#00C4A7]">{code}</span> stays the same — only the destination changes.</p>
+          </div>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"><X size={18} /></button>
+        </div>
+        <div className="px-6 py-5 space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">New destination URL</label>
+            <input
+              autoFocus
+              type="text"
+              value={url}
+              onChange={e => setUrl(e.target.value)}
+              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 outline-none focus:ring-2 focus:ring-[#00C4A7]"
+              placeholder="https://newdestination.com"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Expiry date <span className="font-normal text-slate-400">(optional)</span></label>
+            <input
+              type="date"
+              value={expiresAt}
+              onChange={e => setExpiresAt(e.target.value)}
+              min={new Date().toISOString().split('T')[0]}
+              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 outline-none focus:ring-2 focus:ring-[#00C4A7]"
+            />
+          </div>
+          <div>
+            <button type="button" onClick={() => setShowUtm(o => !o)} className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-[#00C4A7] transition-colors">
+              {showUtm ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+              UTM Parameters
+            </button>
+            {showUtm && (
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                {(['source', 'medium', 'campaign', 'content', 'term'] as const).map(key => (
+                  <div key={key}>
+                    <label className="block text-[10px] text-slate-400 mb-1 capitalize">utm_{key}</label>
+                    <input
+                      type="text"
+                      value={utm[key]}
+                      onChange={e => setUtm(u => ({ ...u, [key]: e.target.value }))}
+                      className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-2 py-1.5 text-xs text-slate-900 dark:text-slate-100 outline-none focus:ring-1 focus:ring-[#00C4A7]"
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          {error && <p className="text-xs text-red-500">{error}</p>}
+        </div>
+        <div className="flex gap-3 px-6 pb-5">
+          <button onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">Cancel</button>
+          <button onClick={handleSave} disabled={saving} className="flex-1 py-2.5 rounded-xl bg-[#00C4A7] text-white text-sm font-bold hover:bg-[#00B096] transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+            {saving ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> : <Wand2 size={15} />}
+            {saving ? 'Saving…' : 'Apply Re-route'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── QR Re-route Modal ─────────────────────────────────────────────────────────
+function QRRerouteModal({ code, currentType, currentContent, onSave, onClose }: {
+  code: string
+  currentType: QrType
+  currentContent: string
+  onSave: (content: string, type: string) => Promise<void>
+  onClose: () => void
+}) {
+  const [qrType, setQrType] = useState<QrType>(currentType)
+  const [content, setContent] = useState<QrContentState>({
+    linkUrl: currentType === 'link' ? currentContent : '',
+    text: currentType === 'text' ? currentContent : '',
+    emailTo: '', emailSubject: '', emailBody: '',
+    phoneNumber: '', smsMessage: '',
+    whatsappNumber: '', whatsappMessage: '',
+    wifiSsid: '', wifiPassword: '', wifiEncryption: 'WPA', wifiHidden: false,
+    vcardFirstName: '', vcardLastName: '', vcardEmail: '', vcardPhone: '',
+    vcardCompany: '', vcardTitle: '', vcardWebsite: '',
+    eventTitle: '', eventLocation: '', eventStart: '', eventEnd: '', eventDescription: '',
+    mediaUrl: '', appStoreUrl: '', playStoreUrl: '',
+    socialPlatform: 'instagram', socialHandle: '',
+  })
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  const payload = buildQrPayload(qrType, content)
+
+  async function handleSave() {
+    if (!payload) { setError('Please fill in the required fields'); return }
+    setSaving(true)
+    setError('')
+    // For link-type QRs the redirect stays /q/{code} so same QR image works
+    // For other types the content is stored and new QR image should be downloaded
+    try { await onSave(payload, qrType) }
+    catch (e: any) { setError(e.message); setSaving(false) }
+  }
+
+  const isLinkType = qrType === 'link'
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={onClose}>
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex-shrink-0">
+          <div>
+            <h2 className="font-bold text-slate-900 dark:text-white">Re-route QR code</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              {isLinkType
+                ? <>QR code <span className="font-mono text-[#00C4A7]">{code}</span> stays the same — only the destination changes instantly.</>
+                : <>After saving, download the updated QR image to replace the old one.</>
+              }
+            </p>
+          </div>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors flex-shrink-0"><X size={18} /></button>
+        </div>
+        <div className="px-6 py-5 space-y-5 overflow-y-auto flex-1">
+          <div>
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2">QR Type</label>
+            <QrTypeSelector value={qrType} onChange={setQrType} />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2">Content</label>
+            <ContentForm qrType={qrType} value={content} onChange={setContent} />
+          </div>
+          {!isLinkType && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30 px-4 py-3 text-xs text-amber-700 dark:text-amber-300">
+              ⚠️ This QR type embeds content directly. After saving, download the new QR image to replace any printed or shared copies.
+            </div>
+          )}
+          {error && <p className="text-xs text-red-500">{error}</p>}
+        </div>
+        <div className="flex gap-3 px-6 pb-5 flex-shrink-0">
+          <button onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">Cancel</button>
+          <button onClick={handleSave} disabled={saving || !payload} className="flex-1 py-2.5 rounded-xl bg-[#00C4A7] text-white text-sm font-bold hover:bg-[#00B096] transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+            {saving ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> : <Wand2 size={15} />}
+            {saving ? 'Saving…' : 'Apply Re-route'}
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

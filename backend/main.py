@@ -1224,6 +1224,8 @@ async def update_dashboard_qr(
     if not qr:
         raise HTTPException(status_code=404, detail="QR code not found")
     qr.content = body.new_content
+    if body.new_qr_type:
+        qr.qr_type = body.new_qr_type
     await db.commit()
     return {"ok": True, "new_content": body.new_content}
 

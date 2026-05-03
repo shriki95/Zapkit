@@ -283,10 +283,10 @@ export async function updateLink(shortCode: string, newUrl: string): Promise<voi
   if (!res.ok) throw new Error(await parseApiError(res, 'Failed to update link'))
 }
 
-export async function updateQR(qrCode: string, newContent: string): Promise<void> {
+export async function updateQR(qrCode: string, newContent: string, newQrType?: string): Promise<void> {
   const res = await apiFetch(`/api/dashboard/qr/${qrCode}`, {
     method: 'PATCH',
-    body: JSON.stringify({ new_content: newContent }),
+    body: JSON.stringify({ new_content: newContent, new_qr_type: newQrType }),
   })
   if (!res.ok) throw new Error(await parseApiError(res, 'Failed to update QR'))
 }

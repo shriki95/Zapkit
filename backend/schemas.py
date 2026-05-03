@@ -94,6 +94,7 @@ class UpdateLinkRequest(BaseModel):
 
 class UpdateQRRequest(BaseModel):
     new_content: str
+    new_qr_type: str | None = None
 
 
 # ── User Authentication Schemas ──────────────────────────────────────────────
