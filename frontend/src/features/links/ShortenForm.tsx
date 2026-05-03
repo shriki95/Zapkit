@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import {
   Link2, ChevronDown, ChevronUp, Wand2, Settings2, Sparkles,
-  Phone, MessageSquare, MessageCircle, Mail, Globe,
+  Phone, MessageSquare, MessageCircle, Mail, Globe, type LucideIcon,
 } from 'lucide-react'
 import type { ShortenRequest, ShortenResponse } from './types'
 import InfoTooltip from '../../components/InfoTooltip'
@@ -12,13 +12,64 @@ const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 // ── Link Types ────────────────────────────────────────────────────────────────
 type LinkType = 'url' | 'call' | 'sms' | 'whatsapp' | 'email'
 
-const LINK_TYPES: Array<{ key: LinkType; label: string; icon: typeof Link2; description: string }> = [
+const LINK_TYPES: Array<{ key: LinkType; label: string; icon: LucideIcon; description: string }> = [
   { key: 'url',       label: 'URL',       icon: Globe,         description: 'Website link' },
-  { key: 'call',      label: 'Call',      icon: Phone,         description: 'Phone number' },
+  { key: 'call',      label: 'Call',      icon: Phone,         description: 'Phone call' },
   { key: 'sms',       label: 'SMS',       icon: MessageSquare, description: 'Text message' },
-  { key: 'whatsapp',  label: 'WhatsApp',  icon: MessageCircle, description: 'WhatsApp chat' },
-  { key: 'email',     label: 'Email',     icon: Mail,          description: 'Send email' },
+  { key: 'whatsapp',  label: 'WhatsApp',  icon: MessageCircle, description: 'wa.me' },
+  { key: 'email',     label: 'Email',     icon: Mail,          description: 'mailto:' },
 ]
+
+function LinkTypeButton({
+  t, active, onClick,
+}: { t: typeof LINK_TYPES[number]; active: boolean; onClick: () => void }) {
+  const Icon = t.icon
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="rounded-xl border px-3 py-2 text-left transition border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+    >
+      <div className="flex items-center gap-1.5 mb-0.5">
+        <Icon className={`h-3.5 w-3.5 flex-shrink-0 ${active ? 'text-[#00C4A7]' : 'text-slate-400 dark:text-slate-500'}`} />
+        <span className={`text-sm font-semibold ${active ? 'text-[#00C4A7]' : ''}`}>{t.label}</span>
+      </div>
+      <div className="text-xs text-slate-500 dark:text-slate-400">{t.description}</div>
+    </button>
+  )
+}
+
+function LinkTypeSelector({ value, onChange }: { value: LinkType; onChange: (k: LinkType) => void }) {
+  const [showMore, setShowMore] = useState(value !== 'url')
+  const selected = LINK_TYPES.find(t => t.key === value) ?? LINK_TYPES[0]
+  const rest = LINK_TYPES.filter(t => t.key !== value)
+
+  return (
+    <div className="space-y-2">
+      <div className="grid grid-cols-1">
+        <LinkTypeButton t={selected} active={true} onClick={() => {}} />
+      </div>
+      <button
+        type="button"
+        onClick={() => setShowMore(o => !o)}
+        className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-[#00C4A7] transition-colors"
+      >
+        {showMore ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+        More types
+      </button>
+      {showMore && (
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {rest.map(t => (
+            <LinkTypeButton
+              key={t.key} t={t} active={false}
+              onClick={() => { onChange(t.key); setShowMore(false) }}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 function buildLinkUrl(type: LinkType, fields: Record<string, string>): string {
   switch (type) {
@@ -149,27 +200,7 @@ export default function ShortenForm({ onResult, onRefreshLinks, onLoadingChange,
     <form onSubmit={submit} className="card p-5 space-y-4">
 
       {/* Link Type Selector */}
-      <div className="flex gap-1.5 flex-wrap">
-        {LINK_TYPES.map(t => {
-          const Icon = t.icon
-          const active = linkType === t.key
-          return (
-            <button
-              key={t.key}
-              type="button"
-              onClick={() => { setLinkType(t.key); setError('') }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-colors ${
-                active
-                  ? 'border-[#00C4A7] bg-[#00C4A7]/10 text-[#00C4A7]'
-                  : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:border-[#00C4A7]/50'
-              }`}
-            >
-              <Icon size={13} />
-              {t.label}
-            </button>
-          )
-        })}
-      </div>
+      <LinkTypeSelector value={linkType} onChange={(k) => { setLinkType(k); setError('') }} />
 
       {/* Dynamic input based on type */}
       {linkType === 'url' && (
