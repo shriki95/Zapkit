@@ -9,7 +9,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts'
 import {
-  ArrowUpRight, BarChart3, Calendar, ExternalLink, Link2,
+  BarChart3, Calendar, ExternalLink, Link2,
   QrCode, RefreshCw, TrendingUp, Eye, Zap,
   LogIn, LogOut, Moon, Sun, Trash2, Settings as SettingsIcon,
   LayoutDashboard, CheckSquare, Square, Copy, Check, Download,
