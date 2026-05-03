@@ -2,11 +2,8 @@ import { useState } from 'react'
 import { Link, AlignLeft, Mail, Phone, MessageSquare, MessageCircle, Wifi, Contact, CalendarDays, FileImage, Smartphone, Heart, ChevronDown, ChevronUp, type LucideIcon } from 'lucide-react'
 import type { QrType } from './types'
 
-const PRIMARY_TYPE: Array<{ key: QrType; label: string; description: string; icon: LucideIcon }> = [
-  { key: 'link', label: 'Link', description: 'Website URL', icon: Link },
-]
-
-const MORE_TYPES: Array<{ key: QrType; label: string; description: string; icon: LucideIcon }> = [
+const ALL_TYPES: Array<{ key: QrType; label: string; description: string; icon: LucideIcon }> = [
+  { key: 'link',     label: 'Link',     description: 'Website URL',     icon: Link },
   { key: 'text',     label: 'Text',     description: 'Plain text',      icon: AlignLeft },
   { key: 'email',    label: 'Email',    description: 'mailto:',         icon: Mail },
   { key: 'call',     label: 'Call',     description: 'Phone call',      icon: Phone },
@@ -30,16 +27,11 @@ function TypeButton({ t, active, onChange }: {
     <button
       type="button"
       onClick={() => onChange(t.key)}
-      className={[
-        'rounded-xl border px-3 py-2 text-left transition',
-        active
-          ? 'border-[#00C4A7]/40 bg-[#00C4A7]/5 text-slate-900 dark:bg-[#00C4A7]/10 dark:text-slate-100'
-          : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700',
-      ].join(' ')}
+      className="rounded-xl border px-3 py-2 text-left transition border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
     >
       <div className="flex items-center gap-1.5 mb-0.5">
         <Icon className={`h-3.5 w-3.5 flex-shrink-0 ${active ? 'text-[#00C4A7]' : 'text-slate-400 dark:text-slate-500'}`} />
-        <span className="text-sm font-semibold">{t.label}</span>
+        <span className={`text-sm font-semibold ${active ? 'text-[#00C4A7]' : ''}`}>{t.label}</span>
       </div>
       <div className="text-xs text-slate-500 dark:text-slate-400">{t.description}</div>
     </button>
@@ -53,32 +45,33 @@ export function QrTypeSelector({
   value: QrType
   onChange: (next: QrType) => void
 }) {
-  const [showMore, setShowMore] = useState(MORE_TYPES.some(t => t.key === value))
+  const [showMore, setShowMore] = useState(value !== 'link')
+
+  // Selected type always shows on top; remaining types go to "More types"
+  const selected = ALL_TYPES.find(t => t.key === value) ?? ALL_TYPES[0]
+  const rest = ALL_TYPES.filter(t => t.key !== value)
 
   return (
     <div className="space-y-2">
-      {/* Primary: Link */}
+      {/* Currently selected type — always visible */}
       <div className="grid grid-cols-1">
-        {PRIMARY_TYPE.map(t => (
-          <TypeButton key={t.key} t={t} active={t.key === value} onChange={onChange} />
-        ))}
+        <TypeButton t={selected} active={true} onChange={onChange} />
       </div>
 
       {/* More Types toggle */}
       <button
         type="button"
         onClick={() => setShowMore(o => !o)}
-        className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-[#00C4A7] transition-colors w-full"
+        className="flex items-center gap-1.5 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-[#00C4A7] transition-colors"
       >
         {showMore ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
         More types
       </button>
 
-      {/* All other types */}
       {showMore && (
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-          {MORE_TYPES.map(t => (
-            <TypeButton key={t.key} t={t} active={t.key === value} onChange={onChange} />
+          {rest.map(t => (
+            <TypeButton key={t.key} t={t} active={false} onChange={(k) => { onChange(k); setShowMore(false); }} />
           ))}
         </div>
       )}
