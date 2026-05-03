@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import {
-  Link2, ChevronDown, ChevronUp, Wand2, Settings2, Sparkles,
+  ChevronDown, ChevronUp, Wand2, Settings2, Sparkles,
   Phone, MessageSquare, MessageCircle, Mail, Globe, type LucideIcon,
 } from 'lucide-react'
 import type { ShortenRequest, ShortenResponse } from './types'
 import InfoTooltip from '../../components/InfoTooltip'
+import { PhoneInput } from '../../components/PhoneInput'
+import { Field, Input, Textarea } from '../qr/steps/fields'
 import { getToken, getUser } from '../../lib/auth'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
@@ -78,11 +80,11 @@ function buildLinkUrl(type: LinkType, fields: Record<string, string>): string {
       return u.startsWith('http') ? u : `https://${u}`
     }
     case 'call':
-      return `tel:${fields.phone?.replace(/\s/g, '') || ''}`
+      return `tel:${fields.phone?.replace(/[\s\-()]/g, '') || ''}`
     case 'sms':
       return fields.message
-        ? `sms:${fields.phone?.replace(/\s/g, '') || ''}?body=${encodeURIComponent(fields.message)}`
-        : `sms:${fields.phone?.replace(/\s/g, '') || ''}`
+        ? `sms:${fields.phone?.replace(/[\s\-()]/g, '') || ''}?body=${encodeURIComponent(fields.message)}`
+        : `sms:${fields.phone?.replace(/[\s\-()]/g, '') || ''}`
     case 'whatsapp': {
       const num = (fields.phone || '').replace(/[\s\-+()]/g, '')
       return fields.message
@@ -213,67 +215,61 @@ export default function ShortenForm({ onResult, onRefreshLinks, onLoadingChange,
         </header>
 
         <div className="space-y-3">
-          {/* Dynamic fields */}
+          {/* Dynamic fields — same Field/Input/PhoneInput style as QR Generator */}
           {linkType === 'url' && (
-            <div className="flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-900 focus-within:ring-2 focus-within:ring-[#00C4A7] transition">
-              <div className="pl-4 shrink-0"><Link2 size={18} className="text-[#00C4A7]" /></div>
-              <input
-                type="text"
-                value={fields.url}
-                onChange={e => { f('url', e.target.value); setError('') }}
-                placeholder="Paste your long URL here…"
-                className="flex-1 py-3 pr-4 bg-transparent text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none text-sm"
-                autoFocus
-              />
+            <div className="space-y-3">
+              <InfoTooltip text="The link will be shortened to a zapkit.link short URL" />
+              <Field label="Website URL" required>
+                <Input value={fields.url} onChange={v => { f('url', v); setError('') }} placeholder="yourwebsite.com" />
+              </Field>
             </div>
           )}
 
-          {(linkType === 'call' || linkType === 'sms' || linkType === 'whatsapp') && (
-            <div className="space-y-2">
-              <input
-                type="tel"
-                value={fields.phone}
-                onChange={e => f('phone', e.target.value)}
-                placeholder={linkType === 'whatsapp' ? '+1 234 567 8900' : 'Phone number'}
-                className="input-field text-sm py-2.5"
-                autoFocus
-              />
-              {(linkType === 'sms' || linkType === 'whatsapp') && (
-                <textarea
-                  value={fields.message}
-                  onChange={e => f('message', e.target.value)}
-                  placeholder="Pre-filled message (optional)"
-                  rows={3}
-                  className="input-field text-sm py-2 resize-none"
-                />
-              )}
+          {linkType === 'call' && (
+            <div className="space-y-3">
+              <InfoTooltip text="Clicking the link will dial this number directly" />
+              <Field label="Phone number" required>
+                <PhoneInput value={fields.phone} onChange={v => f('phone', v)} placeholder="50 1234567" />
+              </Field>
+            </div>
+          )}
+
+          {linkType === 'sms' && (
+            <div className="space-y-3">
+              <InfoTooltip text="Clicking the link will open a pre-filled SMS on the user's device" />
+              <Field label="Phone number" required>
+                <PhoneInput value={fields.phone} onChange={v => f('phone', v)} placeholder="50 1234567" />
+              </Field>
+              <Field label="Message">
+                <Textarea value={fields.message} onChange={v => f('message', v)} placeholder="Message (optional)" rows={3} />
+              </Field>
+            </div>
+          )}
+
+          {linkType === 'whatsapp' && (
+            <div className="space-y-3">
+              <InfoTooltip text="Clicking the link will open WhatsApp with a pre-filled message. Select your country code." />
+              <Field label="WhatsApp number" required>
+                <PhoneInput value={fields.phone} onChange={v => f('phone', v)} placeholder="50 1234567" />
+              </Field>
+              <Field label="Message (optional)">
+                <Textarea value={fields.message} onChange={v => f('message', v)} placeholder="Hi! I clicked your link..." rows={3} />
+              </Field>
             </div>
           )}
 
           {linkType === 'email' && (
-            <div className="space-y-2">
-              <input
-                type="email"
-                value={fields.email}
-                onChange={e => f('email', e.target.value)}
-                placeholder="recipient@example.com"
-                className="input-field text-sm py-2.5"
-                autoFocus
-              />
-              <input
-                type="text"
-                value={fields.subject}
-                onChange={e => f('subject', e.target.value)}
-                placeholder="Subject (optional)"
-                className="input-field text-sm py-2"
-              />
-              <textarea
-                value={fields.body}
-                onChange={e => f('body', e.target.value)}
-                placeholder="Message body (optional)"
-                rows={3}
-                className="input-field text-sm py-2 resize-none"
-              />
+            <div className="space-y-3">
+              <InfoTooltip text="Clicking the link will open a pre-filled email draft on the user's device" />
+              <Field label="Email" required>
+                <Input value={fields.email} onChange={v => f('email', v)} placeholder="name@company.com" />
+              </Field>
+              <Field label="Subject">
+                <Input value={fields.subject} onChange={v => f('subject', v)} placeholder="Subject (optional)" />
+              </Field>
+              <Field label="Message">
+                <Textarea value={fields.body} onChange={v => f('body', v)} placeholder="Message body (optional)" rows={3} />
+              </Field>
             </div>
           )}
 
