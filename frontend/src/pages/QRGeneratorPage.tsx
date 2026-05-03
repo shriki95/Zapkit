@@ -13,7 +13,7 @@ import { QrDecoder } from '../features/qr/QrDecoder'
 import { BatchProcessor } from '../features/qr/BatchProcessor'
 import { SSLUpload } from '../components/SSLUpload'
 import SEOOptimizer from '../components/SEOOptimizer'
-import { logout, createQR } from '../lib/auth'
+import { logout, createQR, getToken } from '../lib/auth'
 import { useAuth } from '../App'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
@@ -64,6 +64,9 @@ export default function QRGeneratorPage() {
 
   const [content, setContent] = useState<QrContentState>({
     linkUrl: new URLSearchParams(window.location.search).get('url') ?? '',
+    linkAlias: '',
+    linkExpiresAt: '',
+    linkUtm: { source: '', medium: '', campaign: '', content: '', term: '' },
     text: '',
     emailTo: '',
     emailSubject: '',
@@ -119,10 +122,49 @@ export default function QRGeneratorPage() {
     let finalPayload = payload
     if (qrType === 'link' && user && !savedPayloads.has(payload)) {
       try {
-        const result = await createQR(qrType, payload)
-        if (result.qr_code) {
-          finalPayload = `${API_BASE}/q/${result.qr_code}`
-          setSavedPayloads(prev => new Set(prev).add(payload))
+        // If optional settings (alias, expiry, UTM) are set, create a short link first
+        const hasOptional = content.linkAlias || content.linkExpiresAt ||
+          Object.values(content.linkUtm ?? {}).some(Boolean)
+
+        if (hasOptional) {
+          // Build URL with UTM params
+          let urlForShorten = content.linkUrl.trim()
+          if (!urlForShorten.startsWith('http')) urlForShorten = 'https://' + urlForShorten
+          const utm = content.linkUtm ?? {}
+          const utmParams = new URLSearchParams()
+          Object.entries(utm).forEach(([k, v]) => { if (v) utmParams.set(`utm_${k}`, v) })
+          const utmStr = utmParams.toString()
+          if (utmStr) urlForShorten += (urlForShorten.includes('?') ? '&' : '?') + utmStr
+
+          const shortenRes = await fetch(`${API_BASE}/api/shorten`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}),
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+              url: urlForShorten,
+              custom_alias: content.linkAlias || undefined,
+              expires_at: content.linkExpiresAt || undefined,
+            }),
+          })
+          if (shortenRes.ok) {
+            const data = await shortenRes.json()
+            finalPayload = data.short_url
+            setSavedPayloads(prev => new Set(prev).add(payload))
+          }
+          // Create QR record pointing to short link
+          const result = await createQR(qrType, finalPayload)
+          if (result.qr_code) {
+            finalPayload = `${API_BASE}/q/${result.qr_code}`
+          }
+        } else {
+          const result = await createQR(qrType, payload)
+          if (result.qr_code) {
+            finalPayload = `${API_BASE}/q/${result.qr_code}`
+            setSavedPayloads(prev => new Set(prev).add(payload))
+          }
         }
       } catch { /* fall back to original URL */ }
     }

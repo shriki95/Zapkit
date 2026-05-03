@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { QrContentState, QrType, SocialPlatform } from '../types'
 import { Field, Input, Textarea } from './fields'
 import InfoTooltip from '../../../components/InfoTooltip'
+import { Settings2, ChevronDown, ChevronUp, Wand2 } from 'lucide-react'
 
 // ── Country Code Picker ───────────────────────────────────────────────────────
 const COUNTRY_CODES = [
@@ -198,6 +199,93 @@ const SOCIAL_PLATFORMS: Array<{ key: SocialPlatform; label: string; placeholder:
   { key: 'snapchat',  label: 'Snapchat',  placeholder: 'username',     color: '#FFFC00' },
 ]
 
+// ── Link Content Form with Optional Settings ──────────────────────────────────
+function LinkContentForm({ value, patch }: { value: QrContentState; patch: (p: Partial<QrContentState>) => void }) {
+  const [optionsOpen, setOptionsOpen] = useState(false)
+  const utm = value.linkUtm ?? { source: '', medium: '', campaign: '', content: '', term: '' }
+
+  return (
+    <div className="space-y-3">
+      <Field label="Website URL" required>
+        <Input value={value.linkUrl} onChange={(v) => patch({ linkUrl: v })} placeholder="yourwebsite.com" />
+      </Field>
+
+      {/* Optional Settings */}
+      <div>
+        <button
+          type="button"
+          onClick={() => setOptionsOpen(o => !o)}
+          className="flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-[#00C4A7] transition-colors"
+        >
+          <Settings2 size={13} />
+          Optional settings
+          {optionsOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+        </button>
+
+        {optionsOpen && (
+          <div className="mt-3 space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                  Custom Alias
+                  <InfoTooltip text="Choose a custom ending for your short URL. Leave blank for a random code." />
+                </label>
+                <div className="flex items-center gap-1">
+                  <span className="text-xs text-slate-400 shrink-0">zapkit.link/</span>
+                  <input
+                    type="text"
+                    value={value.linkAlias ?? ''}
+                    onChange={e => patch({ linkAlias: e.target.value.replace(/[^a-z0-9-_]/gi, '').toLowerCase() })}
+                    placeholder="my-link"
+                    className="input-field text-sm py-2"
+                  />
+                </div>
+              </div>
+              <div className="min-w-0">
+                <label className="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 mb-1">
+                  Expiry Date
+                  <InfoTooltip text="The link will stop working after this date. Leave blank for permanent." />
+                </label>
+                <input
+                  type="date"
+                  value={value.linkExpiresAt ?? ''}
+                  onChange={e => patch({ linkExpiresAt: e.target.value })}
+                  min={new Date().toISOString().split('T')[0]}
+                  className="input-field text-sm py-2 w-full max-w-full"
+                  style={{ minWidth: 0 }}
+                />
+              </div>
+            </div>
+
+            {/* UTM Parameters */}
+            <div>
+              <label className="flex items-center gap-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 mb-2">
+                <Wand2 size={13} />
+                UTM Parameters
+                <InfoTooltip text="Add UTM tags to track traffic in Google Analytics." />
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                {(['source', 'medium', 'campaign', 'content', 'term'] as const).map(key => (
+                  <div key={key}>
+                    <label className="block text-xs text-slate-500 dark:text-slate-400 mb-1 capitalize">utm_{key}</label>
+                    <input
+                      type="text"
+                      value={utm[key]}
+                      onChange={e => patch({ linkUtm: { ...utm, [key]: e.target.value } })}
+                      placeholder={key === 'source' ? 'e.g. twitter' : key === 'medium' ? 'e.g. social' : ''}
+                      className="input-field text-xs py-2"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 type Props = {
   qrType: QrType
   value: QrContentState
@@ -208,13 +296,7 @@ export function ContentForm({ qrType, value, onChange }: Props) {
   const patch = (p: Partial<QrContentState>) => onChange({ ...value, ...p })
 
   if (qrType === 'link') {
-    return (
-      <div className="space-y-3">
-        <Field label="Website URL" required>
-          <Input value={value.linkUrl} onChange={(v) => patch({ linkUrl: v })} placeholder="yourwebsite.com" />
-        </Field>
-      </div>
-    )
+    return <LinkContentForm value={value} patch={patch} />
   }
 
   if (qrType === 'text') {

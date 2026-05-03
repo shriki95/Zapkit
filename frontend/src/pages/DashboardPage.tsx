@@ -576,12 +576,14 @@ export default function DashboardPage() {
                                       >
                                         <Download size={10} /> {downloadingQR === qr.qr_code ? 'Saving…' : 'Download'}
                                       </button>
-                                      <button
-                                        onClick={e => { e.stopPropagation(); setRerouteTarget({ kind: 'qr', code: qr.qr_code, currentType: qr.qr_type, currentContent: qr.content }) }}
-                                        className="flex items-center gap-1 hover:text-[#00C4A7] transition-colors font-medium"
-                                      >
-                                        <Edit2 size={10} /> Re-route
-                                      </button>
+                                      {qr.qr_type === 'link' && (
+                                        <button
+                                          onClick={e => { e.stopPropagation(); setRerouteTarget({ kind: 'qr', code: qr.qr_code, currentType: qr.qr_type, currentContent: qr.content }) }}
+                                          className="flex items-center gap-1 hover:text-[#00C4A7] transition-colors font-medium"
+                                        >
+                                          <Edit2 size={10} /> Re-route
+                                        </button>
+                                      )}
                                     </div>
                                   </button>
                                   {/* Delete button */}
@@ -917,6 +919,9 @@ function QRRerouteModal({ code, currentType, currentContent, onSave, onClose }: 
   const [qrType, setQrType] = useState<QrType>(currentType)
   const [content, setContent] = useState<QrContentState>({
     linkUrl: currentType === 'link' ? currentContent : '',
+    linkAlias: '',
+    linkExpiresAt: '',
+    linkUtm: { source: '', medium: '', campaign: '', content: '', term: '' },
     text: currentType === 'text' ? currentContent : '',
     emailTo: '', emailSubject: '', emailBody: '',
     phoneNumber: '', smsMessage: '',

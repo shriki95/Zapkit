@@ -22,6 +22,11 @@ export type AppStore = 'appstore' | 'playstore' | 'both'
 
 export type QrContentState = {
   linkUrl: string
+  // optional link settings (only for qrType === 'link')
+  linkAlias: string
+  linkExpiresAt: string
+  linkUtm: { source: string; medium: string; campaign: string; content: string; term: string }
+
   text: string
 
   emailTo: string
