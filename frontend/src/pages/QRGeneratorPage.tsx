@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { FileSpreadsheet, Moon, QrCode, ScanLine, Share2, Sun, Zap, LogIn, LogOut, LayoutDashboard, ChevronDown, Settings as SettingsIcon } from 'lucide-react'
+import { FileSpreadsheet, Moon, QrCode, ScanLine, Share2, Sparkles, Sun, Zap, LogIn, LogOut, LayoutDashboard, ChevronDown, Settings as SettingsIcon } from 'lucide-react'
 import type QRCodeStyling from 'qr-code-styling'
 import { buildQrPayload } from '../features/qr/payload'
 import type { DesignOptions, QrContentState, QrType } from '../features/qr/types'
@@ -316,10 +316,17 @@ export default function QRGeneratorPage() {
 
       {/* Generate Tab */}
       {appTab === 'generate' && (
-        <main className="mx-auto grid max-w-6xl grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-[520px_1fr]" role="tabpanel">
-          <section className={`space-y-4 ${generatedPayload ? 'order-2 lg:order-1' : 'order-1'}`}>
+        <main
+          className={`mx-auto px-4 py-6 ${
+            isGenerating || generatedPayload
+              ? 'grid max-w-6xl grid-cols-1 gap-6 lg:grid-cols-[520px_1fr]'
+              : 'max-w-2xl'
+          }`}
+          role="tabpanel"
+        >
+          <section className="space-y-4">
             <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-              <header className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              <header className="mb-3 flex items-center justify-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 <span className="inline-flex h-6 w-6 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">1</span>
                 Type
               </header>
@@ -327,7 +334,7 @@ export default function QRGeneratorPage() {
             </article>
 
             <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-              <header className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              <header className="mb-3 flex items-center justify-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 <span className="inline-flex h-6 w-6 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">2</span>
                 Content
               </header>
@@ -340,7 +347,7 @@ export default function QRGeneratorPage() {
                 onClick={() => setDesignOpen(o => !o)}
                 className="w-full flex items-center justify-between px-4 py-3 text-left transition hover:bg-slate-50 dark:hover:bg-slate-800"
               >
-                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                <div className="flex items-center justify-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   <span className="inline-flex h-6 w-6 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">3</span>
                   Design your QR Code
                   <span className="ml-1 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] text-slate-500 dark:bg-slate-700 dark:text-slate-400">Optional</span>
@@ -354,21 +361,36 @@ export default function QRGeneratorPage() {
                   <DesignTabs value={design} onChange={setDesign} />
                 </div>
               )}
-              <button
-                type="button"
-                onClick={handleGenerate}
-                disabled={!payload || isGenerating}
-                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#00C4A7] px-4 py-3.5 text-sm font-bold text-white shadow-md transition-all hover:bg-[#00B096] active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                {isGenerating ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> : <QrCode className="h-4 w-4" />}
-                {isGenerating ? 'Generating...' : 'Generate QR Code'}
-              </button>
+              {user ? (
+                <button
+                  type="button"
+                  onClick={handleGenerate}
+                  disabled={!payload || isGenerating}
+                  className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#00C4A7] px-4 py-3.5 text-sm font-bold text-white shadow-md transition-all hover:bg-[#00B096] active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {isGenerating ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> : <QrCode className="h-4 w-4" />}
+                  {isGenerating ? 'Generating...' : 'Generate QR Code'}
+                </button>
+              ) : (
+                <div className="mt-4 rounded-xl border border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/50 p-4 text-center space-y-2">
+                  <div className="text-sm text-slate-600 dark:text-slate-300 font-medium">Sign up free to generate QR codes</div>
+                  <div className="text-xs text-slate-400 dark:text-slate-500">Free forever · Analytics included · No credit card</div>
+                  <button
+                    type="button"
+                    onClick={() => { setAuthMode('register'); setShowAuthModal(true) }}
+                    className="mt-1 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#00C4A7] px-4 py-2.5 text-sm font-bold text-white shadow transition-all hover:bg-[#00B096] active:scale-95"
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    Get started — it's free
+                  </button>
+                </div>
+              )}
             </article>
           </section>
 
-          <aside className={`lg:sticky lg:top-6 ${generatedPayload ? 'order-1 lg:order-2' : 'order-2'}`}>
+          {(isGenerating || generatedPayload) && <aside className="lg:sticky lg:top-6">
             <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-              <header className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+              <header className="mb-3 flex items-center justify-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 <span className="inline-flex h-6 w-6 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">4</span>
                 Result
               </header>
@@ -482,7 +504,7 @@ export default function QRGeneratorPage() {
               )}
 
             </section>
-          </aside>
+          </aside>}
         </main>
       )}
 
