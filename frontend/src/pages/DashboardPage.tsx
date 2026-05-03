@@ -338,13 +338,12 @@ export default function DashboardPage() {
                         ? 'bg-gradient-to-br from-[#00C4A7]/10 to-[#00C4A7]/5 border-[#00C4A7]/20 dark:border-[#00C4A7]/30'
                         : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800'
                     }`}>
-                      <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center mb-3">
                         <div className={`p-2 rounded-xl ${accent ? 'bg-[#00C4A7]/15' : 'bg-slate-100 dark:bg-slate-800'}`}>
                           <Icon size={18} className={accent ? 'text-[#00C4A7]' : 'text-slate-600 dark:text-slate-400'} />
                         </div>
-                        {accent && <ArrowUpRight size={16} className="text-[#00C4A7]/60" />}
                       </div>
-                      <div className={`text-3xl font-black tracking-tight ${accent ? 'text-[#00C4A7]' : 'text-slate-900 dark:text-white'}`}>
+                      <div className={`text-3xl font-bold tracking-tight ${accent ? 'text-[#00C4A7]' : 'text-slate-900 dark:text-white'}`}>
                         {value.toLocaleString()}
                       </div>
                       <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">{label}</div>
