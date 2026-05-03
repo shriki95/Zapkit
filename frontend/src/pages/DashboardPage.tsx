@@ -2,7 +2,7 @@
  * DashboardPage — standalone luxury analytics hub
  * Route: /dashboard  |  Tabs: Analytics · Settings
  */
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
@@ -13,12 +13,31 @@ import {
   QrCode, RefreshCw, TrendingUp, Eye, Zap,
   LogIn, LogOut, Moon, Sun, Trash2, Settings as SettingsIcon,
   LayoutDashboard, CheckSquare, Square, Copy, Check, Download,
+  Edit2, X,
 } from 'lucide-react'
 import {
   getDashboard, getLinkStats, getQRStats, logout,
-  deleteLink, deleteQR,
+  deleteLink, deleteQR, updateLink, updateQR,
   type LinkStats, type QRStats,
 } from '../lib/auth'
+import QRCodeStylingLib from 'qr-code-styling'
+
+// ── Mini QR renderer ──────────────────────────────────────────────────────────
+function MiniQRPreview({ data, size = 200 }: { data: string; size?: number }) {
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!ref.current || !data) return
+    ref.current.innerHTML = ''
+    const qr = new QRCodeStylingLib({
+      width: size, height: size, data,
+      dotsOptions: { color: '#1e293b', type: 'rounded' },
+      backgroundOptions: { color: '#ffffff' },
+      qrOptions: { errorCorrectionLevel: 'M' },
+    })
+    qr.append(ref.current)
+  }, [data, size])
+  return <div ref={ref} className="rounded-xl overflow-hidden bg-white p-2 shadow-sm" />
+}
 import { useAuth } from '../App'
 import Settings from '../components/Settings'
 
@@ -78,6 +97,10 @@ export default function DashboardPage() {
   const [deleting, setDeleting] = useState(false)
   const [copiedCode, setCopiedCode] = useState<string | null>(null)
   const [downloadingQR, setDownloadingQR] = useState<string | null>(null)
+  const [editingCode, setEditingCode] = useState<string | null>(null)
+  const [editValue, setEditValue] = useState('')
+  const [editSaving, setEditSaving] = useState(false)
+  const [viewingQR, setViewingQR] = useState<{ content: string; label: string } | null>(null)
 
   useEffect(() => { if (!user) navigate('/') }, [user, navigate])
   useEffect(() => { loadDashboard() }, [])
@@ -136,6 +159,22 @@ export default function DashboardPage() {
   }
 
   const handleLogout = () => { logout(); setUser(null) }
+
+  async function saveEdit(type: 'link' | 'qr', code: string) {
+    if (!editValue.trim()) return
+    setEditSaving(true)
+    try {
+      if (type === 'link') {
+        await updateLink(code, editValue.trim())
+        setData(d => d ? { ...d, links: d.links.map(l => l.short_code === code ? { ...l, original_url: editValue.trim() } : l) } : d)
+      } else {
+        await updateQR(code, editValue.trim())
+        setData(d => d ? { ...d, qr_codes: d.qr_codes.map(q => q.qr_code === code ? { ...q, content: editValue.trim() } : q) } : d)
+      }
+      setEditingCode(null)
+    } catch (e: any) { setError(e.message) }
+    finally { setEditSaving(false) }
+  }
 
   function handleCopy(text: string, code: string) {
     navigator.clipboard.writeText(text).then(() => {
@@ -213,6 +252,22 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
+
+      {/* ── QR Preview Modal ───────────────────────────────────────────────── */}
+      {viewingQR && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setViewingQR(null)}>
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-6 max-w-xs w-full text-center" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <span className="font-bold text-slate-900 dark:text-white">{viewingQR.label}</span>
+              <button onClick={() => setViewingQR(null)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"><X size={18} /></button>
+            </div>
+            <div className="flex justify-center mb-3">
+              <MiniQRPreview data={viewingQR.content} size={200} />
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 break-all mt-2">{viewingQR.content}</p>
+          </div>
+        </div>
+      )}
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-40 border-b border-slate-200/80 dark:border-slate-800 bg-white/90 dark:bg-slate-950/90 backdrop-blur-lg">
@@ -408,6 +463,20 @@ export default function DashboardPage() {
                                       </span>
                                     </div>
                                     <p className="text-xs text-slate-500 dark:text-slate-400 truncate mb-2 pl-5">{shortUrl(link.original_url)}</p>
+                                    {editingCode === link.short_code && (
+                                      <div className="flex gap-1 mb-2 pl-5" onClick={e => e.stopPropagation()}>
+                                        <input
+                                          autoFocus
+                                          value={editValue}
+                                          onChange={e => setEditValue(e.target.value)}
+                                          onKeyDown={e => { if (e.key === 'Enter') saveEdit('link', link.short_code); if (e.key === 'Escape') setEditingCode(null) }}
+                                          className="flex-1 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 text-xs text-slate-900 dark:text-slate-100 outline-none focus:ring-1 focus:ring-[#00C4A7]"
+                                          placeholder="New destination URL…"
+                                        />
+                                        <button onClick={() => saveEdit('link', link.short_code)} disabled={editSaving} className="rounded-lg bg-[#00C4A7] px-2 py-1 text-white text-xs hover:bg-[#00B096] transition-colors"><Check size={11} /></button>
+                                        <button onClick={() => setEditingCode(null)} className="rounded-lg border border-slate-200 dark:border-slate-700 px-2 py-1 text-xs text-slate-500 hover:text-slate-700 transition-colors"><X size={11} /></button>
+                                      </div>
+                                    )}
                                     <div className="flex items-center gap-3 text-[10px] text-slate-400 pl-5 flex-wrap">
                                       <span className="flex items-center gap-1"><Calendar size={10} /> {fmt(link.created_at)}</span>
                                       <a href={link.short_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-[#00C4A7] transition-colors" onClick={e => e.stopPropagation()}>
@@ -418,6 +487,12 @@ export default function DashboardPage() {
                                         className={`flex items-center gap-1 transition-colors ${copiedCode === link.short_code ? 'text-green-500' : 'hover:text-[#00C4A7]'}`}
                                       >
                                         {copiedCode === link.short_code ? <><Check size={10} /> Copied!</> : <><Copy size={10} /> Copy link</>}
+                                      </button>
+                                      <button
+                                        onClick={e => { e.stopPropagation(); setEditingCode(link.short_code); setEditValue(link.original_url) }}
+                                        className="flex items-center gap-1 hover:text-[#00C4A7] transition-colors"
+                                      >
+                                        <Edit2 size={10} /> Re-route
                                       </button>
                                     </div>
                                   </button>
@@ -465,26 +540,49 @@ export default function DashboardPage() {
                                       </span>
                                     </div>
                                     <p className="font-mono text-xs text-slate-500 dark:text-slate-400 mb-2 pl-5 truncate">{qr.content}</p>
+                                    {editingCode === qr.qr_code && (
+                                      <div className="flex gap-1 mb-2 pl-5" onClick={e => e.stopPropagation()}>
+                                        <input
+                                          autoFocus
+                                          value={editValue}
+                                          onChange={e => setEditValue(e.target.value)}
+                                          onKeyDown={e => { if (e.key === 'Enter') saveEdit('qr', qr.qr_code); if (e.key === 'Escape') setEditingCode(null) }}
+                                          className="flex-1 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 text-xs text-slate-900 dark:text-slate-100 outline-none focus:ring-1 focus:ring-[#00C4A7]"
+                                          placeholder="New destination…"
+                                        />
+                                        <button onClick={() => saveEdit('qr', qr.qr_code)} disabled={editSaving} className="rounded-lg bg-[#00C4A7] px-2 py-1 text-white text-xs hover:bg-[#00B096] transition-colors"><Check size={11} /></button>
+                                        <button onClick={() => setEditingCode(null)} className="rounded-lg border border-slate-200 dark:border-slate-700 px-2 py-1 text-xs text-slate-500 hover:text-slate-700 transition-colors"><X size={11} /></button>
+                                      </div>
+                                    )}
                                     <div className="text-[10px] text-slate-400 flex items-center gap-3 pl-5 flex-wrap">
                                       <span className="flex items-center gap-1"><Calendar size={10} /> {fmt(qr.created_at)}</span>
+                                      <button
+                                        onClick={e => { e.stopPropagation(); setViewingQR({ content: qr.qr_type === 'link' ? `${API_BASE}/q/${qr.qr_code}` : qr.content, label: qrTypeLabel(qr.qr_type) }) }}
+                                        className="flex items-center gap-1 hover:text-[#00C4A7] transition-colors"
+                                      >
+                                        <QrCode size={10} /> View QR
+                                      </button>
                                       <button
                                         onClick={e => { e.stopPropagation(); handleCopy(qr.content, qr.qr_code) }}
                                         className={`flex items-center gap-1 transition-colors ${copiedCode === qr.qr_code ? 'text-green-500' : 'hover:text-[#00C4A7]'}`}
                                       >
-                                        {copiedCode === qr.qr_code ? <><Check size={10} /> Copied!</> : <><Copy size={10} /> Copy content</>}
+                                        {copiedCode === qr.qr_code ? <><Check size={10} /> Copied!</> : <><Copy size={10} /> Copy</>}
                                       </button>
                                       <button
                                         onClick={e => {
                                           e.stopPropagation()
-                                          // Link-type QRs: download with the backend redirect URL so they stay deactivatable
-                                          const downloadContent = qr.qr_type === 'link'
-                                            ? `${API_BASE}/q/${qr.qr_code}`
-                                            : qr.content
+                                          const downloadContent = qr.qr_type === 'link' ? `${API_BASE}/q/${qr.qr_code}` : qr.content
                                           handleQRDownload(downloadContent, qr.qr_code)
                                         }}
                                         className="flex items-center gap-1 hover:text-indigo-500 transition-colors"
                                       >
                                         <Download size={10} /> {downloadingQR === qr.qr_code ? 'Saving…' : 'Download'}
+                                      </button>
+                                      <button
+                                        onClick={e => { e.stopPropagation(); setEditingCode(qr.qr_code); setEditValue(qr.content) }}
+                                        className="flex items-center gap-1 hover:text-[#00C4A7] transition-colors"
+                                      >
+                                        <Edit2 size={10} /> Re-route
                                       </button>
                                     </div>
                                   </button>
