@@ -1,7 +1,7 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { GoogleOAuthProvider } from '@react-oauth/google'
-import { getUser, initAutoLogout, type User } from './lib/auth'
+import { getUser, initAutoLogout, touchActivity, type User } from './lib/auth'
 import { applyAccentOverride } from './lib/theme'
 import HomePage from './pages/HomePage'
 import TinyLinkPage from './pages/TinyLinkPage'
@@ -70,6 +70,8 @@ export default function App() {
   const [user, setUser] = useState<User | null>(getUser())
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login')
+  const [showIdleWarning, setShowIdleWarning] = useState(false)
+  const [idleCountdown, setIdleCountdown] = useState(120)
 
   // Setter that also persists the theme
   const setDark = (v: boolean | ((prev: boolean) => boolean)) => {
@@ -122,11 +124,28 @@ export default function App() {
   }, [])
 
   // Auto-logout on idle (single instance for the whole app)
-  useEffect(() => {
-    return initAutoLogout(() => {
-      setUser(null)
-    })
+  const handleIdleLogout = useCallback(() => {
+    setUser(null)
+    setShowIdleWarning(false)
   }, [])
+
+  useEffect(() => {
+    return initAutoLogout(handleIdleLogout, () => {
+      setShowIdleWarning(true)
+      setIdleCountdown(120)
+    })
+  }, [handleIdleLogout])
+
+  // Idle warning countdown
+  useEffect(() => {
+    if (!showIdleWarning) return
+    if (idleCountdown <= 0) {
+      handleIdleLogout()
+      return
+    }
+    const timer = setTimeout(() => setIdleCountdown(c => c - 1), 1000)
+    return () => clearTimeout(timer)
+  }, [showIdleWarning, idleCountdown, handleIdleLogout])
 
   // Sync user on focus / visibility change
   useEffect(() => {
@@ -170,6 +189,35 @@ export default function App() {
 
         {/* Global GDPR Banner */}
         <GDPRBanner />
+
+        {/* Idle session warning */}
+        {showIdleWarning && user && (
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[999] w-[calc(100%-2rem)] max-w-sm">
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/80 shadow-2xl backdrop-blur p-4">
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 text-xl">⏱</div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-amber-900 dark:text-amber-100">Session expiring soon</p>
+                  <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">
+                    You'll be logged out in <span className="font-bold tabular-nums">{idleCountdown}s</span> due to inactivity.
+                  </p>
+                  <button
+                    onClick={() => { touchActivity(); setShowIdleWarning(false) }}
+                    className="mt-2 px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold transition-colors"
+                  >
+                    Stay logged in
+                  </button>
+                </div>
+                <button
+                  onClick={() => setShowIdleWarning(false)}
+                  className="text-amber-400 hover:text-amber-600 transition-colors shrink-0"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </BrowserRouter>
     </AuthContext.Provider>
     </GoogleOAuthProvider>

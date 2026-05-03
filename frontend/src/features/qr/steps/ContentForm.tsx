@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { QrContentState, QrType, SocialPlatform } from '../types'
 import { Field, Input, Textarea } from './fields'
 import InfoTooltip from '../../../components/InfoTooltip'
@@ -81,62 +81,105 @@ const COUNTRY_CODES = [
 ]
 
 function PhoneInput({ value, onChange, placeholder = 'Phone number' }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
+  const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
+  const containerRef = useRef<HTMLDivElement>(null)
 
   // Split value into countryCode + localNumber
   const matchedCode = COUNTRY_CODES.find(c => value.startsWith(c.code))
   const selectedCode = matchedCode?.code ?? ''
+  const selectedEntry = matchedCode ?? null
   const localNumber = matchedCode ? value.slice(matchedCode.code.length) : value.replace(/^\+\d{1,4}/, '')
 
-  const filtered = COUNTRY_CODES.filter(c =>
-    c.name.toLowerCase().includes(search.toLowerCase()) || c.code.includes(search)
-  )
-  // Remove duplicates
-  const unique = filtered.filter((c, i, arr) => arr.findIndex(x => x.code === c.code) === i)
+  const filtered = COUNTRY_CODES
+    .filter((c, i, arr) => arr.findIndex(x => x.code === c.code) === i) // unique codes
+    .filter(c =>
+      c.name.toLowerCase().includes(search.toLowerCase()) ||
+      c.code.includes(search) ||
+      (search.startsWith('+') && c.code.startsWith(search))
+    )
 
-  const handleCodeChange = (newCode: string) => {
+  const handleCodeSelect = (newCode: string) => {
     onChange(newCode + localNumber)
     setSearch('')
+    setOpen(false)
   }
 
   const handleNumberChange = (num: string) => {
     onChange(selectedCode + num.replace(/[^0-9\s\-()]/g, ''))
   }
 
+  // Close on outside click
+  useEffect(() => {
+    if (!open) return
+    const handler = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false)
+        setSearch('')
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [open])
+
   return (
-    <div className="space-y-2">
-      <div className="flex gap-2">
-        {/* Country code selector */}
-        <div className="relative">
-          <select
-            value={selectedCode}
-            onChange={e => handleCodeChange(e.target.value)}
-            className="w-36 rounded-lg border border-slate-200 bg-white px-2 py-2 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-[#00C4A7] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 appearance-none cursor-pointer"
-            style={{ paddingRight: 24 }}
-          >
-            <option value="">🌍 Country</option>
-            {unique.map(c => (
-              <option key={`${c.code}-${c.name}`} value={c.code}>
-                {c.flag} {c.code} - {c.name}
-              </option>
-            ))}
-          </select>
-          <svg className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-slate-400" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6"/></svg>
-        </div>
-        {/* Local number */}
-        <input
-          type="tel"
-          value={localNumber}
-          onChange={e => handleNumberChange(e.target.value)}
-          placeholder={placeholder}
-          className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-[#00C4A7] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-        />
+    <div className="flex gap-2">
+      {/* Country code button */}
+      <div className="relative" ref={containerRef}>
+        <button
+          type="button"
+          onClick={() => { setOpen(o => !o); setSearch('') }}
+          className="flex items-center gap-1.5 h-full min-w-[88px] rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-sm text-slate-700 outline-none hover:border-[#00C4A7] focus:ring-2 focus:ring-[#00C4A7] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 transition-colors"
+        >
+          <span className="text-base leading-none">{selectedEntry ? selectedEntry.flag : '🌍'}</span>
+          <span className="font-mono text-xs text-slate-500 dark:text-slate-400">{selectedEntry ? selectedEntry.code : ''}</span>
+          <svg className="text-slate-400 shrink-0" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+
+        {open && (
+          <div className="absolute left-0 top-full mt-1 z-50 w-64 rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-900 overflow-hidden">
+            {/* Search input */}
+            <div className="p-2 border-b border-slate-100 dark:border-slate-800">
+              <input
+                autoFocus
+                type="text"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Type country or +code…"
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs text-slate-900 outline-none focus:ring-2 focus:ring-[#00C4A7] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+              />
+            </div>
+            {/* List */}
+            <div className="max-h-52 overflow-y-auto">
+              {filtered.length === 0 ? (
+                <div className="px-3 py-4 text-center text-xs text-slate-400">No results</div>
+              ) : filtered.map(c => (
+                <button
+                  key={`${c.code}-${c.name}`}
+                  type="button"
+                  onClick={() => handleCodeSelect(c.code)}
+                  className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors ${
+                    c.code === selectedCode ? 'bg-[#00C4A7]/10 text-[#00C4A7]' : 'text-slate-700 dark:text-slate-300'
+                  }`}
+                >
+                  <span className="text-base">{c.flag}</span>
+                  <span className="font-mono text-xs text-slate-500 dark:text-slate-400 w-10 shrink-0">{c.code}</span>
+                  <span className="truncate text-xs">{c.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
-      {selectedCode && (
-        <div className="text-xs text-slate-500 dark:text-slate-400">
-          Full number: <span className="font-mono font-semibold text-slate-700 dark:text-slate-300">{selectedCode}{localNumber || '...'}</span>
-        </div>
-      )}
+
+      {/* Local number */}
+      <input
+        type="tel"
+        value={localNumber}
+        onChange={e => handleNumberChange(e.target.value)}
+        placeholder={placeholder}
+        className="flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-[#00C4A7] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+      />
     </div>
   )
 }

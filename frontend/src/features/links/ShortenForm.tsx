@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { Link2, ChevronDown, ChevronUp, Wand2, Settings2 } from 'lucide-react'
+import { Link2, ChevronDown, ChevronUp, Wand2, Settings2, Sparkles } from 'lucide-react'
 // ChevronDown/Up used for optionsOpen toggle
 import type { ShortenRequest, ShortenResponse } from './types'
 import InfoTooltip from '../../components/InfoTooltip'
-import { getToken } from '../../lib/auth'
+import { getToken, getUser } from '../../lib/auth'
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -12,9 +12,11 @@ interface Props {
   onRefreshLinks: () => void
   onLoadingChange?: (loading: boolean) => void
   onTrackClick?: () => void
+  onSignUpClick?: () => void
 }
 
-export default function ShortenForm({ onResult, onRefreshLinks, onLoadingChange }: Props) {
+export default function ShortenForm({ onResult, onRefreshLinks, onLoadingChange, onSignUpClick }: Props) {
+  const isLoggedIn = !!getUser()
   const [url, setUrl] = useState('')
   const [alias, setAlias] = useState('')
   const [expiresAt, setExpiresAt] = useState('')
@@ -214,21 +216,38 @@ export default function ShortenForm({ onResult, onRefreshLinks, onLoadingChange 
         </div>
       )}
 
-      <button type="submit" disabled={loading} className="btn-primary w-full flex items-center justify-center gap-2 text-base py-3">
-        {loading ? (
-          <>
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-            Shortening…
-          </>
-        ) : (
-          <>
-            <Wand2 size={18} />
-            Shorten Link
-          </>
-        )}
-      </button>
-
-      {/* Ad Modal */}
+      {isLoggedIn ? (
+        <button type="submit" disabled={loading} className="btn-primary w-full flex items-center justify-center gap-2 text-base py-3">
+          {loading ? (
+            <>
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              Shortening…
+            </>
+          ) : (
+            <>
+              <Wand2 size={18} />
+              Shorten Link
+            </>
+          )}
+        </button>
+      ) : (
+        <div className="rounded-xl border border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/50 p-4 text-center space-y-3">
+          <div className="text-sm text-slate-600 dark:text-slate-300 font-medium">
+            Sign up free to start shortening links
+          </div>
+          <div className="text-xs text-slate-400 dark:text-slate-500">
+            Free forever · Analytics included · No credit card
+          </div>
+          <button
+            type="button"
+            onClick={onSignUpClick}
+            className="btn-primary w-full flex items-center justify-center gap-2 text-sm py-2.5"
+          >
+            <Sparkles size={16} />
+            Get started — it's free
+          </button>
+        </div>
+      )}
     </form>
   )
 }

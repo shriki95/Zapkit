@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Moon, Sun, Link2, LayoutDashboard, Zap, Share2, Globe, LogIn, LogOut, ChevronDown, Settings as SettingsIcon } from 'lucide-react'
+import { Moon, Sun, LayoutDashboard, Zap, Share2, Globe, LogIn, LogOut, ChevronDown, Settings as SettingsIcon } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../App'
 import SEOOptimizer from '../components/SEOOptimizer'
@@ -8,12 +8,6 @@ import ShortenForm from '../features/links/ShortenForm'
 import ResultCard from '../features/links/ResultCard'
 import { logout } from '../lib/auth'
 import type { ShortenResponse } from '../features/links/types'
-
-type Tab = 'shorten'
-
-const TABS = [
-  { id: 'shorten' as Tab, label: 'Shorten', icon: Link2 },
-]
 
 const COMPANY = 'ZapKit'
 const COMPANY_TAGLINE = 'Free digital tools, built to last.'
@@ -23,7 +17,6 @@ export default function TinyLinkPage() {
   const location = useLocation()
   const navigate = useNavigate()
 
-  const [tab, setTab] = useState<Tab>('shorten')
   const [result, setResult] = useState<ShortenResponse | null>(null)
   const [shareCopied, setShareCopied] = useState(false)
   const [isShortening, setIsShortening] = useState(false)
@@ -52,12 +45,7 @@ export default function TinyLinkPage() {
   const handleLogout = () => {
     logout()
     setUser(null)
-    setTab('shorten')
     setShowUserMenu(false)
-  }
-
-  const handleTabClick = (tabId: Tab) => {
-    setTab(tabId)
   }
 
   const shareApp = async () => {
@@ -71,11 +59,9 @@ export default function TinyLinkPage() {
     }
   }
 
-  const visibleTabs = TABS
-
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
-      <SEOOptimizer activeTab={tab} />
+      <SEOOptimizer activeTab="shorten" />
 
       {/* Header */}
       <header className="sticky top-0 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur border-b border-slate-200 dark:border-slate-800">
@@ -96,26 +82,8 @@ export default function TinyLinkPage() {
             </div>
           </Link>
 
-          {/* Desktop nav */}
-          <nav className="hidden sm:flex items-center gap-1 flex-1 justify-center">
-            {visibleTabs.map(t => {
-              const Icon = t.icon
-              return (
-                <button
-                  key={t.id}
-                  onClick={() => handleTabClick(t.id)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                    tab === t.id
-                      ? 'bg-[#00C4A7]/10 text-[#00C4A7]'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  <Icon size={15} />
-                  {t.label}
-                </button>
-              )
-            })}
-          </nav>
+          {/* Spacer for centering */}
+          <div className="hidden sm:flex flex-1" />
 
           {/* Right actions */}
           <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
@@ -177,28 +145,10 @@ export default function TinyLinkPage() {
           </div>
         </div>
 
-        {/* Mobile tabs */}
-        <div className="sm:hidden flex border-t border-slate-100 dark:border-slate-800">
-          {visibleTabs.map(t => {
-            const Icon = t.icon
-            return (
-              <button
-                key={t.id}
-                onClick={() => handleTabClick(t.id)}
-                className={`flex-1 flex flex-col items-center gap-0.5 py-2 text-xs font-medium transition-colors ${
-                  tab === t.id ? 'text-[#00C4A7]' : 'text-slate-500 dark:text-slate-400'
-                }`}
-              >
-                <Icon size={16} />
-                {t.label}
-              </button>
-            )
-          })}
-        </div>
       </header>
 
       {/* Hero banner */}
-      {tab === 'shorten' && (
+      {true && (
         <section className="relative bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 dark:from-black dark:via-slate-950 dark:to-black py-16 px-4 text-center overflow-hidden">
           <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
           <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#00C4A7]/10 rounded-full blur-3xl"></div>
@@ -213,10 +163,12 @@ export default function TinyLinkPage() {
               Trusted by thousands worldwide
             </div>
             <h1 className="text-4xl sm:text-5xl font-extrabold text-white mb-4 tracking-tight">
-              Professional Link Management
+              {user ? 'Your Link Dashboard' : 'Shorten. Track. Grow.'}
             </h1>
             <p className="text-slate-300 text-lg max-w-2xl mx-auto leading-relaxed">
-              Transform long URLs into powerful branded links. Track performance, analyze engagement, and optimize your digital presence with enterprise-grade analytics.
+              {user
+                ? 'Create short links, track real-time analytics, and manage everything from your dashboard.'
+                : 'Create a free account and turn long URLs into smart, trackable links in seconds. No credit card required.'}
             </p>
             <div className="flex flex-wrap items-center justify-center gap-6 mt-8 text-sm text-slate-400">
               {['Instant Generation', 'Real-time Analytics', 'Secure & Private'].map(f => (
@@ -235,7 +187,7 @@ export default function TinyLinkPage() {
       {/* Main content */}
       <main className="max-w-5xl mx-auto px-4 py-8">
         <AnimatePresence mode="wait">
-          {tab === 'shorten' && (
+          {true && (
             <motion.div key="shorten" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-5">
               <ShortenForm
                 onResult={setResult}
@@ -246,6 +198,10 @@ export default function TinyLinkPage() {
                     setAuthMode('register')
                     setShowAuthModal(true)
                   }
+                }}
+                onSignUpClick={() => {
+                  setAuthMode('register')
+                  setShowAuthModal(true)
                 }}
               />
 
@@ -287,7 +243,7 @@ export default function TinyLinkPage() {
       </main>
 
       {/* Footer */}
-      {tab === 'shorten' && (
+      {true && (
         <footer className="border-t border-slate-200 dark:border-slate-800 mt-12 py-8 px-4">
           <div className="max-w-5xl mx-auto">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">

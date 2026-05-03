@@ -121,21 +121,36 @@ export function isAuthenticated(): boolean {
   return !!getToken()
 }
 
-export function initAutoLogout(onLogout?: () => void) {
+const WARN_BEFORE_MS = 2 * 60 * 1000 // warn 2 minutes before logout
+
+export function initAutoLogout(onLogout?: () => void, onWarn?: () => void) {
   const activityEvents: Array<keyof WindowEventMap> = ['click', 'keydown', 'mousemove', 'scroll', 'touchstart']
+  let warned = false
+
   const markActive = () => {
-    if (getToken(false)) touchActivity()
+    if (getToken(false)) {
+      touchActivity()
+      warned = false // reset warn flag when user is active
+    }
   }
 
   activityEvents.forEach(eventName => window.addEventListener(eventName, markActive, { passive: true }))
 
   const intervalId = window.setInterval(() => {
     syncAuthFromCookies()
+    if (!getToken(false)) return
+
+    const idleMs = Date.now() - getLastActivity()
+
     if (hasIdleSessionExpired()) {
       clearAuth()
+      warned = false
       onLogout?.()
+    } else if (!warned && idleMs > IDLE_TIMEOUT_MS - WARN_BEFORE_MS) {
+      warned = true
+      onWarn?.()
     }
-  }, 30 * 1000)
+  }, 15 * 1000) // check every 15 seconds
 
   return () => {
     activityEvents.forEach(eventName => window.removeEventListener(eventName, markActive))
